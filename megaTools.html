@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>你好，GitHub</title>
+  </head>
+  <script>
+    function change(){
+      var megaurls = document.getElementById("megaurls");
+      var lines = megaurls.value.replace(/\r\n/g,"\n").split("\n");
+      lines.forEach((name, index) => lines[index] = lines[index].replace("#","!").replace("file/","#!"));
+      document.getElementById("show").innerHTML=lines.join("<br />");
+    }
+  </script>
+  <body>
+    <textarea id="megaurls" rows="10" cols="100"></textarea>
+	<input type="button" value="NewToOld Url" onclick="change()"/>
+	<br>
+	<br>
+	<div id="show"></div>
+  </body>
+</html>
