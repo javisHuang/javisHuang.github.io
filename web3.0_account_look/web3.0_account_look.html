@@ -17,6 +17,7 @@
 <script>
     angular.module("app", ['dialogService'])
         .controller("Web3Ctrl", function($scope,dialogService) {
+            $scope.vs_currencies = "TWD";
             $scope.isconnectMetamask = false;
             $scope.currentAccount="";
             // 实例化web3
@@ -49,7 +50,7 @@
                     $scope.currentAccount = accounts[0];
                     console.log($scope.currentAccount, 1);
                     $scope.isconnectMetamask = true;
-                    getbalance(asset_platforms_id,chainId,$scope.currentAccount);
+                    getbalance(asset_platforms_id,chainId,$scope.currentAccount,$scope.vs_currencies);
                 })
             }
             $scope.disconnectMetamask = async function(){
@@ -73,7 +74,7 @@
                     dialogService.showAlert('登出MetaMask連接');
                 })
             }
-            async function getbalance(asset_platforms_id,chainId,currentAccount){
+            async function getbalance(asset_platforms_id,chainId,currentAccount,vs_currencies){
                 // 返回指定地址账户的余额
                 var mainbalance = await web3.eth.getBalance(currentAccount);
                 var etherBalance = web3.utils.fromWei(mainbalance, 'ether');
@@ -97,7 +98,7 @@
                 coins[main] = {};
                 coins[main].name = main.Main.name;
                 coins[main].balance = etherBalance;
-                coins[main].value = await getCoinIDUsd(main.CoinID);
+                coins[main].value = await getCoinID(main.CoinID,vs_currencies);
                 total+=coins[main].balance*coins[main].value;
                 progress+=add;
                 $("#progressBar").width(progress+"%");
@@ -105,7 +106,7 @@
                     coins[value.symbol] = {};
                     coins[value.symbol].name = value.symbol;
                     coins[value.symbol].balance = value.balance;
-                    coins[value.symbol].value = await getContractAddressesUsd(asset_platforms_id,value.contract);
+                    coins[value.symbol].value = await getContractAddresses(asset_platforms_id,value.contract,vs_currencies);
                     total+=coins[value.symbol].balance*coins[value.symbol].value;
                     progress+=add;
                     $("#progressBar").width(progress+"%");
@@ -135,7 +136,7 @@
                 $scope.coinList = table;
             }
 
-            async function getCoinIDUsd(ids){
+            async function getCoinID(ids,vs_currencies){
                 var handleError = function (err) {
                     console.warn(err);
                     return new Response(JSON.stringify({
@@ -143,11 +144,11 @@
                         message: 'Stupid network Error'
                     }));
                 };
-                const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`).catch(handleError);
+                const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=${vs_currencies}`).catch(handleError);
                 if (res.ok) {
                     const token_price = await res.json();
                     if (token_price[ids]) {
-                        return token_price[ids].usd;
+                        return token_price[ids][vs_currencies.toLowerCase()];
                     } else {
                         return 0;
                     }
@@ -156,7 +157,8 @@
                 }
             }
 
-            async function getContractAddressesUsd(id,contract_addresses){
+            async function getContractAddresses(id,contract_addresses,vs_currencies){
+                contract_addresses = contract_addresses.toLowerCase();
                 var handleError = function (err) {
                     console.warn(err);
                     return new Response(JSON.stringify({
@@ -164,11 +166,11 @@
                         message: 'Stupid network Error'
                     }));
                 };
-                const res = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${id}?contract_addresses=${contract_addresses}&vs_currencies=usd`).catch(handleError);
+                const res = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${id}?contract_addresses=${contract_addresses}&vs_currencies=${vs_currencies}`).catch(handleError);
                 if (res.ok) {
                     const token_price = await res.json();
                     if (token_price[contract_addresses]) {
-                        return token_price[contract_addresses].usd;
+                        return token_price[contract_addresses][vs_currencies.toLowerCase()];
                     } else {
                         return 0;
                     }
@@ -255,7 +257,7 @@
     <div class="row" ng-repeat="(key, value) in coinList">
         <div style="margin: 10px;" class="col" ng-repeat="coin in value">
             <div class="card">
-                <div class="card-header">{{coin.name}}/USDT</div>
+                <div class="card-header">{{coin.name}}/{{vs_currencies}}（{{coin.value}}）</div>
                 <div class="card-body">{{coin.balance}}顆</div>
                 <div class="card-footer">價值：{{coin.balance*coin.value}}</div>
             </div>
