@@ -12,6 +12,14 @@ tokens[1].subTokens.push('0x582d872a1b094fc48f5de31d3b73f2d9be47def1'); //TON
 tokens[1].subTokens.push('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0'); //MATIC
 tokens[1].subTokens.push('0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce'); //SHIB
 
+tokens[10]={};
+tokens[10].Main = "OP";
+tokens[10].Coin = "ETH";
+tokens[10].CoinID = "ethereum";
+tokens[10].subTokens = [];
+tokens[10].subTokens.push('0x4200000000000000000000000000000000000042'); //OP
+tokens[10].subTokens.push('0x7F5c764cBc14f9669B88837ca1490cCa17c31607'); //USDC
+
 tokens[56]={};
 tokens[56].Main = "BNB";
 tokens[56].Coin = "BNB";
@@ -37,6 +45,12 @@ tokens[137].subTokens.push('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'); //USDC
 tokens[137].subTokens.push('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'); //WMATIC
 tokens[137].subTokens.push('0xBAC3368B5110f3a3ddA8B5a0F7B66EDb37C47AFe'); //AIPEPE
 tokens[137].subTokens.push('0x4193103fbd8eBdD4F50aCc37E024037E0a2392f9'); //AIWORDS
+
+tokens[324]={};
+tokens[324].Main = "zksync Era";
+tokens[324].Coin = "ETH";
+tokens[324].CoinID = "ethereum";
+tokens[324].subTokens = [];
 
 tokens[42161]={};
 tokens[42161].Main = "Arbitrum One";
