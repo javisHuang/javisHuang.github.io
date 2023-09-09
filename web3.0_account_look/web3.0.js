@@ -109,7 +109,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             for (const [key, value] of Object.entries($scope.tokens)) {
                 $scope.chainList[value.Main] = {};
                 $scope.chainList[value.Main].showTable=false;
-                $("#progressBar"+value.Main).width("0%");
+                $("#progressBar"+key).width("0%");
             }
         }
         init();
@@ -186,7 +186,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                 var total = 0;
                 var t = Object.entries(tokensBalance);
                 var add = 100/t.length+1
-                $("#progressBar"+main.Main).width("0%");
+                $("#progressBar"+chainId).width("0%");
                 var progress = 0;
                 coins[main] = {};
                 coins[main].name = main.Coin;
@@ -194,7 +194,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                 coins[main].value = await web3Tools.getCoinID(main.CoinID,vs_currencies);
                 total+=coins[main].balance*coins[main].value;
                 progress+=add;
-                $("#progressBar"+main.Main).width(progress+"%");
+                $("#progressBar"+chainId).width(progress+"%");
                 for (const [key, value] of t) {
                     coins[value.symbol] = {};
                     coins[value.symbol].name = value.symbol;
@@ -202,7 +202,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                     coins[value.symbol].value = await web3Tools.getContractAddresses(asset_platforms_id,value.contract,vs_currencies);
                     total+=coins[value.symbol].balance*coins[value.symbol].value;
                     progress+=add;
-                    $("#progressBar"+main.Main).width(progress+"%");
+                    $("#progressBar"+chainId).width(progress+"%");
                 }
 
                 $scope.$apply(() => {
