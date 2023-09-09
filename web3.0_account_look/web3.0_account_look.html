@@ -24,23 +24,31 @@
         </div>
     </div>
     <div class="row">
-        <div class="progress">
-            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
+        <div class="col-3" ng-click="cardClick(value)" ng-repeat="(key,value) in tokens">
+            <div ng-class="chainList[value.Main].showTable?'card border-primary':'card'">
+                <div class="card-header">{{value.Main}}</div>
+                <div class="card-body">帳戶價值： <span class="badge bg-info">{{chainList[value.Main].coinTotalBalance}}</span></div>
+                <div class="card-footer">
+                    <div class="progress">
+                        <div id="progressBar{{value.Main}}" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="table-responsive">
+    <div class="table-responsive" ng-show="value.showTable" ng-repeat="(key,value) in chainList">
         <table class="table caption-top">
-            <caption>Chain：{{tokenMain}}、帳戶價值： <span class="badge bg-info">{{coinTotalBalance}}</span></caption>
+            <caption>Chain：{{key}}</caption>
             <thead>
                 <tr>
                     <th scope="col">幣</th>
-                    <th scope="col">{{vs_currencies}}</th>
+                    <th scope="col">{{value.vs_currencies}}</th>
                     <th scope="col">顆</th>
                     <th scope="col">價值</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="coin in coinList">
+                <tr ng-repeat="coin in value.coinList">
                     <th>{{coin.name}}</th>
                     <td>{{coin.value}}</td>
                     <td>{{coin.balance}}</td>

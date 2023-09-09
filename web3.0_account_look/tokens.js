@@ -1,5 +1,6 @@
 var tokens = {};
 tokens[1]={};
+tokens[1].Network = "https://ethereum.publicnode.com";
 tokens[1].Main = "ETH";
 tokens[1].Coin = "ETH";
 tokens[1].CoinID = "ethereum";
@@ -13,6 +14,7 @@ tokens[1].subTokens.push('0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0'); //MATIC
 tokens[1].subTokens.push('0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce'); //SHIB
 
 tokens[10]={};
+tokens[10].Network = "https://optimism.publicnode.com";
 tokens[10].Main = "OP";
 tokens[10].Coin = "ETH";
 tokens[10].CoinID = "ethereum";
@@ -21,6 +23,7 @@ tokens[10].subTokens.push('0x4200000000000000000000000000000000000042'); //OP
 tokens[10].subTokens.push('0x7F5c764cBc14f9669B88837ca1490cCa17c31607'); //USDC
 
 tokens[56]={};
+tokens[56].Network = "https://bsc-rpc.gateway.pokt.network";
 tokens[56].Main = "BNB";
 tokens[56].Coin = "BNB";
 tokens[56].CoinID = "binancecoin";
@@ -37,6 +40,7 @@ tokens[56].subTokens.push('0x366945ba85881b77c186597b4639683efeeb65ca'); //CZBI
 tokens[56].subTokens.push('0xfb9f5738c9d767fea5af6e4d826ce18d1a48589a'); //DAD
 
 tokens[137]={};
+tokens[137].Network = "https://polygon.meowrpc.com";
 tokens[137].Main = "Polygon";
 tokens[137].Coin = "MATIC";
 tokens[137].CoinID = "matic-network";
@@ -47,12 +51,14 @@ tokens[137].subTokens.push('0xBAC3368B5110f3a3ddA8B5a0F7B66EDb37C47AFe'); //AIPE
 tokens[137].subTokens.push('0x4193103fbd8eBdD4F50aCc37E024037E0a2392f9'); //AIWORDS
 
 tokens[324]={};
+tokens[324].Network = "https://zksync.meowrpc.com";
 tokens[324].Main = "zksync Era";
 tokens[324].Coin = "ETH";
 tokens[324].CoinID = "ethereum";
 tokens[324].subTokens = [];
 
 tokens[42161]={};
+tokens[42161].Network = "https://arbitrum.meowrpc.com";
 tokens[42161].Main = "Arbitrum One";
 tokens[42161].Coin = "ETH";
 tokens[42161].CoinID = "ethereum";

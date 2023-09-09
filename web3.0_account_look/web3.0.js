@@ -50,7 +50,7 @@ app.factory('web3Tools',function(){
          * tokenAddress: 代币合约地址
          * address: 钱包地址
          **/
-        getTokenBalance : async function(tokenAddress, address) {
+        getTokenBalance : async function(web3,tokenAddress, address) {
             ////创建代币的智能合约函数
             let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
             //调用代币的智能合约获取余额功能
@@ -100,12 +100,19 @@ app.factory('web3Tools',function(){
     }
 })
 app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
-        $scope.vs_currencies = "TWD";
-        $scope.isconnectMetamask = false;
-        $scope.currentAccount="";
-        // 实例化web3
-        window.web3 = new Web3(ethereum);
-        var web3 = window.web3;
+        function init(){
+            $scope.tokens = tokens;
+            $scope.vs_currencies = "TWD";
+            $scope.isconnectMetamask = false;
+            $scope.currentAccount="";
+            $scope.chainList={};
+            for (const [key, value] of Object.entries($scope.tokens)) {
+                $scope.chainList[value.Main] = {};
+                $scope.chainList[value.Main].showTable=false;
+                $("#progressBar"+value.Main).width("0%");
+            }
+        }
+        init();
         $scope.connectMetamask = async function(){
             if (typeof window.ethereum !== 'undefined') {
                 console.log('MetaMask is installed!');
@@ -117,25 +124,23 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             const enable = await ethereum.enable();
             console.log(enable,11);
             // 授权获取账户
-            var accounts = await web3.eth.getAccounts();
+            var accounts = await new Web3(ethereum).eth.getAccounts();
             if (accounts && accounts.length > 0) {
                 console.log("user is connected");
             } else {
                 console.log("user not connected");
                 return;
             }
-            var chainId = Number(await web3.eth.getChainId());
+            // 取第一个账户
+            $scope.currentAccount = accounts[0];
+            $scope.isconnectMetamask = true;
             var asset_platforms = await fetch(`https://api.coingecko.com/api/v3/asset_platforms`);
-            const asset_platforms_json = await asset_platforms.json();
-            var asset_platforms_id = asset_platforms_json.find(x => x.chain_identifier === chainId).id;
-            $scope.$apply(() => {
-                // 取第一个账户
-                $scope.currentAccount = accounts[0];
-                console.log($scope.currentAccount, 1);
-                $scope.isconnectMetamask = true;
-                $scope.tokenMain = tokens[chainId].Main;
-                getbalance(asset_platforms_id,chainId,$scope.currentAccount,$scope.vs_currencies);
-            })
+            $scope.asset_platforms_json = await asset_platforms.json();
+            for (const [key, value] of Object.entries($scope.tokens)) {
+                setTimeout(function(){
+                    eth($scope.tokens[key].Network);
+                }, Math.floor(Math.random()*898)+101);
+            }
         }
         $scope.disconnectMetamask = async function(){
             if (typeof window.ethereum === 'undefined') {
@@ -149,57 +154,68 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                 params: [{eth_accounts: {}}]
             })
             $scope.$apply(() => {
-                delete $scope.currentAccount;
-                delete $scope.isconnectMetamask;
-                delete $scope.coinList;
-                delete $scope.coinTotalBalance;
-                $("#progressBar").width("0%");
-                $("#progressBar").parent().parent().show();
+                init();
                 dialogService.showAlert('登出MetaMask連接');
             })
         }
-        async function getbalance(asset_platforms_id,chainId,currentAccount,vs_currencies){
-            // 返回指定地址账户的余额
-            var mainbalance = await web3.eth.getBalance(currentAccount);
-            var etherBalance = web3.utils.fromWei(mainbalance, 'ether');
-            console.log(etherBalance, 2);
-
-            var tokensBalance=[];
-            for (let subToken of tokens[chainId].subTokens) {
-                let balance = await web3Tools.getTokenBalance(subToken, currentAccount);
-                balance.contract = subToken;
-                tokensBalance.push(balance);
+        $scope.cardClick = function(token){
+            for (const [key, value] of Object.entries($scope.tokens)) {
+                $scope.chainList[value.Main].showTable=false
             }
+            $scope.chainList[token.Main].showTable=true;
+        }
+        async function eth(network){
+            if(network === undefined){
+                return;
+            }
+            async function getbalance(web3,asset_platforms_id,chainId,currentAccount,vs_currencies){
+                // 返回指定地址账户的余额
+                var mainbalance = await web3.eth.getBalance(currentAccount);
+                var etherBalance = web3.utils.fromWei(mainbalance, 'ether');
+                console.log(etherBalance, 2);
 
-            $("#progressBar").parent().parent().show();
-            $("#progressBar").width("0%");
-            var main = tokens[chainId];
-            var coins = {};
-            var total = 0;
-            var t = Object.entries(tokensBalance);
-            var add = 100/t.length+1;
-            var progress = 0;
-            coins[main] = {};
-            coins[main].name = main.Coin;
-            coins[main].balance = etherBalance;
-            coins[main].value = await web3Tools.getCoinID(main.CoinID,vs_currencies);
-            total+=coins[main].balance*coins[main].value;
-            progress+=add;
-            $("#progressBar").width(progress+"%");
-            for (const [key, value] of t) {
-                coins[value.symbol] = {};
-                coins[value.symbol].name = value.symbol;
-                coins[value.symbol].balance = value.balance;
-                coins[value.symbol].value = await web3Tools.getContractAddresses(asset_platforms_id,value.contract,vs_currencies);
-                total+=coins[value.symbol].balance*coins[value.symbol].value;
+                var tokensBalance=[];
+                for (let subToken of $scope.tokens[chainId].subTokens) {
+                    let balance = await web3Tools.getTokenBalance(web3,subToken, currentAccount);
+                    balance.contract = subToken;
+                    tokensBalance.push(balance);
+                }
+
+                var main = $scope.tokens[chainId];
+                var coins = {};
+                var total = 0;
+                var t = Object.entries(tokensBalance);
+                var add = 100/t.length+1
+                $("#progressBar"+main.Main).width("0%");
+                var progress = 0;
+                coins[main] = {};
+                coins[main].name = main.Coin;
+                coins[main].balance = etherBalance;
+                coins[main].value = await web3Tools.getCoinID(main.CoinID,vs_currencies);
+                total+=coins[main].balance*coins[main].value;
                 progress+=add;
-                $("#progressBar").width(progress+"%");
-            }
+                $("#progressBar"+main.Main).width(progress+"%");
+                for (const [key, value] of t) {
+                    coins[value.symbol] = {};
+                    coins[value.symbol].name = value.symbol;
+                    coins[value.symbol].balance = value.balance;
+                    coins[value.symbol].value = await web3Tools.getContractAddresses(asset_platforms_id,value.contract,vs_currencies);
+                    total+=coins[value.symbol].balance*coins[value.symbol].value;
+                    progress+=add;
+                    $("#progressBar"+main.Main).width(progress+"%");
+                }
 
+                $scope.$apply(() => {
+                    $scope.chainList[$scope.tokens[chainId].Main].coinTotalBalance = total;
+                    $scope.chainList[$scope.tokens[chainId].Main].coinList = coins;
+                })
+            }
+            var web3 = new Web3(network);
+            var chainId = Number(await web3.eth.getChainId());
+            var asset_platforms_id = $scope.asset_platforms_json.find(x => x.chain_identifier === chainId).id;
             $scope.$apply(() => {
-                $("#progressBar").parent().parent().hide();
-                $scope.coinTotalBalance = total;
-                $scope.coinList = coins;
+                console.log($scope.currentAccount, 1);
+                getbalance(web3,asset_platforms_id,chainId,$scope.currentAccount,$scope.vs_currencies);
             })
         }
     } )
