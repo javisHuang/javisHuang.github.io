@@ -33,16 +33,9 @@ app.factory('web3Tools',function(){
             };
             const res = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${id}?contract_addresses=${contract_addresses}&vs_currencies=${vs_currencies}`).catch(handleError);
             if (res.ok) {
-                const token_price = await res.json();
-                var taddr = token_price[contract_addresses];
-                if (taddr) {
-                    var price = taddr[vs_currencies.toLowerCase()];
-                    if(price){
-                        return price;
-                    }
-                }
+                return await res.json();
             }
-            return 0;
+            return null;
         },
 
         /**
@@ -136,11 +129,11 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             $scope.isconnectMetamask = true;
             var asset_platforms = await fetch(`https://api.coingecko.com/api/v3/asset_platforms`);
             $scope.asset_platforms_json = await asset_platforms.json();
-            for (const [key, value] of Object.entries($scope.tokens)) {
-                setTimeout(function(){
-                    eth($scope.tokens[key].Network);
-                }, Math.floor(Math.random()*898)+101);
-            }
+            $scope.$apply(async function() {
+                for (const [key, value] of Object.entries($scope.tokens)) {
+                    await eth($scope.tokens[key].Network);
+                }
+            })
         }
         $scope.disconnectMetamask = async function(){
             if (typeof window.ethereum === 'undefined') {
@@ -195,11 +188,24 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                 total+=coins[main].balance*coins[main].value;
                 progress+=add;
                 $("#progressBar"+chainId).width(progress+"%");
+                var contracts=[];
+                for (const [key, value] of t) {
+                    contracts.push(value.contract);
+                }
+                var contractsPrice = await web3Tools.getContractAddresses(asset_platforms_id,contracts.join(),vs_currencies);
                 for (const [key, value] of t) {
                     coins[value.symbol] = {};
                     coins[value.symbol].name = value.symbol;
                     coins[value.symbol].balance = value.balance;
-                    coins[value.symbol].value = await web3Tools.getContractAddresses(asset_platforms_id,value.contract,vs_currencies);
+                    var price=0;
+                    var taddr = contractsPrice[value.contract.toLowerCase()];
+                    if (taddr) {
+                        var tmpprice = taddr[vs_currencies.toLowerCase()];
+                        if(tmpprice){
+                            price = tmpprice;
+                        }
+                    }
+                    coins[value.symbol].value = price;
                     total+=coins[value.symbol].balance*coins[value.symbol].value;
                     progress+=add;
                     $("#progressBar"+chainId).width(progress+"%");
@@ -213,9 +219,6 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             var web3 = new Web3(network);
             var chainId = Number(await web3.eth.getChainId());
             var asset_platforms_id = $scope.asset_platforms_json.find(x => x.chain_identifier === chainId).id;
-            $scope.$apply(() => {
-                console.log($scope.currentAccount, 1);
-                getbalance(web3,asset_platforms_id,chainId,$scope.currentAccount,$scope.vs_currencies);
-            })
+            await getbalance(web3,asset_platforms_id,chainId,$scope.currentAccount,$scope.vs_currencies);
         }
     } )
