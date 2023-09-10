@@ -23,7 +23,7 @@ tokens[10].subTokens.push('0x4200000000000000000000000000000000000042'); //OP
 tokens[10].subTokens.push('0x7F5c764cBc14f9669B88837ca1490cCa17c31607'); //USDC
 
 tokens[56]={};
-tokens[56].Network = "https://bsc-rpc.gateway.pokt.network";
+tokens[56].Network = "https://bsc-dataseed.binance.org";
 tokens[56].Main = "BNB";
 tokens[56].Coin = "BNB";
 tokens[56].CoinID = "binancecoin";

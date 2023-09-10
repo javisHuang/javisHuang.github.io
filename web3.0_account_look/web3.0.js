@@ -37,30 +37,37 @@ app.factory('web3Tools',function(){
             }
             return null;
         },
-
-        /**
+        /*
          * 获得钱包代币数量
-         * tokenAddress: 代币合约地址
-         * address: 钱包地址
-         **/
-        getTokenBalance : async function(web3,tokenAddress, address) {
-            ////创建代币的智能合约函数
-            let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
-            //调用代币的智能合约获取余额功能
-            let result = await tokenContract.methods.balanceOf(address).call();
-            //获得代币有多少位小数
-            let decimals = await tokenContract.methods.decimals().call();
-            let weiName = this.getWeiName(decimals);
-            let tokenBalance = web3.utils.fromWei(result, weiName);
-            //获得代币的符号
-            let symbol = await tokenContract.methods.symbol().call();
-            return {balance:tokenBalance,symbol:symbol};
+         * contractAddresses: 多個代币合约地址
+         * walletAddress: 钱包地址
+         */
+        getBatchTokenBalances: async function(web3,contractAddresses, walletAddress) {
+            const balances = [];
+
+            const contractPromises = contractAddresses.map(async (contractAddress) => {
+                ////创建代币的智能合约函数
+                const tokenContract = new web3.eth.Contract(erc20Abi, contractAddress);
+                //调用代币的智能合约获取余额功能
+                const balance = await tokenContract.methods.balanceOf(walletAddress).call();
+                //获得代币有多少位小数
+                let decimals = await tokenContract.methods.decimals().call();
+                let weiName = this.getWeiName(decimals);
+                let tokenBalance = web3.utils.fromWei(balance, weiName);
+                //获得代币的符号
+                let symbol = await tokenContract.methods.symbol().call();
+                balances.push({balance:tokenBalance,symbol:symbol,contract:contractAddress});
+            });
+
+            await Promise.all(contractPromises);
+
+            return balances;
         },
-        /**
+        /*
          * 通过小数点多少位，转换对应的数据
          * tokenDecimals: 代币的小数点数
          *
-         **/
+         */
         getWeiName:function(tokenDecimals = 18) {
             tokenDecimals = Number(tokenDecimals);
             let weiName = 'ether';
@@ -166,14 +173,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
                 var mainbalance = await web3.eth.getBalance(currentAccount);
                 var etherBalance = web3.utils.fromWei(mainbalance, 'ether');
                 console.log(etherBalance, 2);
-
-                var tokensBalance=[];
-                for (let subToken of $scope.tokens[chainId].subTokens) {
-                    let balance = await web3Tools.getTokenBalance(web3,subToken, currentAccount);
-                    balance.contract = subToken;
-                    tokensBalance.push(balance);
-                }
-
+                let tokensBalance = await web3Tools.getBatchTokenBalances(web3,$scope.tokens[chainId].subTokens, currentAccount);
                 var main = $scope.tokens[chainId];
                 var coins = {};
                 var total = 0;
