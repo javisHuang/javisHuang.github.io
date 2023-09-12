@@ -1,6 +1,38 @@
 var app = angular.module("app", ['dialogService'])
-app.factory('web3Tools',function(){
+app.factory('fetchTools',function(){
     return {
+        fetchWithRetry:function(url, maxRetries)
+        {
+            return new Promise((resolve, reject) => {
+                const retry = (retryCount) => {
+                    fetch(url)
+                        .then((response) => {
+                            if (response.ok) {
+                                resolve(response);
+                            } else {
+                                throw new Error(`Request failed with status: ${response.status}`);
+                            }
+                        })
+                        .catch((error) => {
+                            if (retryCount < maxRetries) {
+                                retry(retryCount + 1);
+                            } else {
+                                reject(error);
+                            }
+                        });
+                };
+
+                retry(0); // Start the first fetch attempt
+            });
+        }
+    }
+});
+app.factory('web3Tools',function(fetchTools){
+    return {
+        getAssetPlatforms:async function(){
+            var asset_platforms = await fetchTools.fetchWithRetry(`https://api.coingecko.com/api/v3/asset_platforms`,3);
+            return await asset_platforms.json();
+        },
         getCoinID:async function (ids,vs_currencies){
             var handleError = function (err) {
                 console.warn(err);
@@ -9,7 +41,7 @@ app.factory('web3Tools',function(){
                     message: 'Stupid network Error'
                 }));
             };
-            const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=${vs_currencies}`).catch(handleError);
+            const res = await fetchTools.fetchWithRetry(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=${vs_currencies}`,3).catch(handleError);
             if (res.ok) {
                 const token_price = await res.json();
                 var tids = token_price[ids];
@@ -31,7 +63,7 @@ app.factory('web3Tools',function(){
                     message: 'Stupid network Error'
                 }));
             };
-            const res = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${id}?contract_addresses=${contract_addresses}&vs_currencies=${vs_currencies}`).catch(handleError);
+            const res = await fetchTools.fetchWithRetry(`https://api.coingecko.com/api/v3/simple/token_price/${id}?contract_addresses=${contract_addresses}&vs_currencies=${vs_currencies}`,3).catch(handleError);
             if (res.ok) {
                 return await res.json();
             }
@@ -99,13 +131,14 @@ app.factory('web3Tools',function(){
         }
     }
 })
-app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
+app.controller("Web3Ctrl", function($timeout,$scope,dialogService,web3Tools) {
+        $scope.vs_currencies = "TWD";
         function init(){
             $scope.tokens = tokens;
-            $scope.vs_currencies = "TWD";
             $scope.isconnectMetamask = false;
             $scope.currentAccount="";
             $scope.chainList={};
+            $scope.allCoinTotalBalance=0;
             for (const [key, value] of Object.entries($scope.tokens)) {
                 $scope.chainList[value.Main] = {};
                 $scope.chainList[value.Main].showTable=false;
@@ -113,6 +146,10 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             }
         }
         init();
+        $scope.convert_change = function (){
+            $scope.disconnectMetamask();
+            dialogService.showAlert('請重新連結錢包');
+        }
         $scope.connectMetamask = async function(){
             if (typeof window.ethereum !== 'undefined') {
                 console.log('MetaMask is installed!');
@@ -134,8 +171,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
             // 取第一个账户
             $scope.currentAccount = accounts[0];
             $scope.isconnectMetamask = true;
-            var asset_platforms = await fetch(`https://api.coingecko.com/api/v3/asset_platforms`);
-            $scope.asset_platforms_json = await asset_platforms.json();
+            $scope.asset_platforms_json = await web3Tools.getAssetPlatforms();
             $scope.$apply(async function() {
                 for (const [key, value] of Object.entries($scope.tokens)) {
                     await eth($scope.tokens[key].Network);
@@ -213,6 +249,7 @@ app.controller("Web3Ctrl", function($scope,dialogService,web3Tools) {
 
                 $scope.$apply(() => {
                     $scope.chainList[$scope.tokens[chainId].Main].coinTotalBalance = total;
+                    $scope.allCoinTotalBalance+=total;
                     $scope.chainList[$scope.tokens[chainId].Main].coinList = coins;
                 })
             }

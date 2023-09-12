@@ -19,15 +19,24 @@
     <div class="row">
         <div class="col"><h1><span class="badge bg-secondary">帳戶：</span>{{currentAccount}}</h1></div>
         <div class="col-auto">
+            <select class="form-select" ng-model="vs_currencies" ng-change="convert_change()">
+                <option>TWD</option>
+                <option>USD</option>
+            </select>
+        </div>
+        <div class="col-auto">
             <a ng-show="!isconnectMetamask" href="javascript:void(0)" class="btn btn-primary btn-lg" role="button" ng-click="connectMetamask()">連結Metamask</a>
             <a ng-show="isconnectMetamask" href="javascript:void(0)" class="btn btn-primary btn-lg" role="button" ng-click="disconnectMetamask()">中斷Metamask</a>
         </div>
     </div>
     <div class="row">
+        <div class="col"><h3><span class="badge bg-secondary">全部資產：</span>{{allCoinTotalBalance}} {{vs_currencies}}</h3></div>
+    </div>
+    <div class="row">
         <div class="col-3" ng-click="cardClick(value)" ng-repeat="(key,value) in tokens">
             <div ng-class="chainList[value.Main].showTable?'card border-primary':'card'">
                 <div class="card-header">{{value.Main}}</div>
-                <div class="card-body">帳戶價值： <span class="badge bg-info">{{chainList[value.Main].coinTotalBalance}}</span></div>
+                <div class="card-body">帳戶價值： <span class="badge bg-info">{{chainList[value.Main].coinTotalBalance}} {{vs_currencies}}</span></div>
                 <div class="card-footer">
                     <div class="progress">
                         <div id="progressBar{{key}}" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%"></div>
