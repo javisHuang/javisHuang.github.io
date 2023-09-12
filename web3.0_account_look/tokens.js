@@ -1,7 +1,7 @@
 var tokens = {};
 tokens[1]={};
 tokens[1].Network = "https://ethereum.publicnode.com";
-tokens[1].Main = "ETH";
+tokens[1].Main = "Ethereum";
 tokens[1].Coin = "ETH";
 tokens[1].CoinID = "ethereum";
 tokens[1].subTokens = [];
@@ -15,7 +15,7 @@ tokens[1].subTokens.push('0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce'); //SHIB
 
 tokens[10]={};
 tokens[10].Network = "https://optimism.publicnode.com";
-tokens[10].Main = "OP";
+tokens[10].Main = "Optimism";
 tokens[10].Coin = "ETH";
 tokens[10].CoinID = "ethereum";
 tokens[10].subTokens = [];
@@ -24,7 +24,7 @@ tokens[10].subTokens.push('0x7F5c764cBc14f9669B88837ca1490cCa17c31607'); //USDC
 
 tokens[56]={};
 tokens[56].Network = "https://bsc-dataseed.binance.org";
-tokens[56].Main = "BNB";
+tokens[56].Main = "BNB Smart Chain";
 tokens[56].Coin = "BNB";
 tokens[56].CoinID = "binancecoin";
 tokens[56].subTokens = [];
@@ -64,16 +64,20 @@ tokens[137].subTokens.push('0x4193103fbd8eBdD4F50aCc37E024037E0a2392f9'); //AIWO
 
 tokens[324]={};
 tokens[324].Network = "https://mainnet.era.zksync.io";
-tokens[324].Main = "zksync Era";
+tokens[324].Main = "zkSync Era";
 tokens[324].Coin = "ETH";
 tokens[324].CoinID = "ethereum";
 tokens[324].subTokens = [];
-/*
 tokens[324].subTokens.push('0xd599dA85F8Fc4877e61f547dFAcffe1238A7149E'); //Cheems
 tokens[324].subTokens.push('0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4'); //USDC
 tokens[324].subTokens.push('0xe62b571E9F40D158cB20796C56E93475d896c56D'); //xUSDC
 tokens[324].subTokens.push('0x47EF4A5641992A72CFd57b9406c9D9cefEE8e0C4'); //ZAT
- */
+tokens[324].subTokens.push('0xeCD9f240ED3895c77dB676004328Dd1d246f33C9'); //ERA
+tokens[324].subTokens.push('0x98141754F0148A34F59f46744503eDB1A2b1e29D'); //GEJU
+tokens[324].subTokens.push('0x030B8487c5f5b77193b53e56F951865B79358e30'); //PPT
+tokens[324].subTokens.push('0x6De8c9C56722E6cE4d725b1c57cB85C9fd7f5aFF'); //ZL
+tokens[324].subTokens.push('0xCDb7D260c107499C80B4b748e8331c64595972a1'); //KAT
+tokens[324].subTokens.push('0x2844EC8A0C85F8F9B4ED4F04ef71eC8594907A0a'); //Nfomo
 
 tokens[8453]={};
 tokens[8453].Network = "https://developer-access-mainnet.base.org";
@@ -108,3 +112,10 @@ tokens[42170].CoinID = "ethereum";
 tokens[42170].subTokens = [];
 tokens[42170].subTokens.push('0xD88492b380bc26593aE032ABF12ea9B135Ed6534'); //nMKX
 tokens[42170].subTokens.push('0xAbDda01e54B894c760f69778a760624cCb159e01'); //XTM
+
+tokens[59144]={};
+tokens[59144].Network = "https://1rpc.io/linea";
+tokens[59144].Main = "Linea";
+tokens[59144].Coin = "ETH";
+tokens[59144].CoinID = "ethereum";
+tokens[59144].subTokens = [];

@@ -76,7 +76,6 @@ app.factory('web3Tools',function(fetchTools){
          */
         getBatchTokenBalances: async function(web3,contractAddresses, walletAddress) {
             const balances = [];
-
             const contractPromises = contractAddresses.map(async (contractAddress) => {
                 ////创建代币的智能合约函数
                 const tokenContract = new web3.eth.Contract(erc20Abi, contractAddress);
@@ -92,7 +91,47 @@ app.factory('web3Tools',function(fetchTools){
             });
 
             await Promise.all(contractPromises);
+            return balances;
+        },
+        /*
+         * 获得ZkSyncEra钱包代币数量
+         * contractAddresses: 多個代币合约地址
+         * walletAddress: 钱包地址
+         */
+        getZkSyncEraBatchTokenBalances: async function(web3,contractAddresses, walletAddress){
+            const balances = [];
+            const contractPromises = contractAddresses.map(async (contractAddress) => {
+                const zkSyncContract = new web3.eth.Contract(erc20Abi, contractAddress);
+                const data = zkSyncContract.methods.balanceOf(walletAddress).encodeABI();
 
+                var txObject = {
+                    to: contractAddress,
+                    data: data,
+                };
+                var balanceResult = await web3.eth.call(txObject);
+                var balance = web3.utils.hexToNumberString(balanceResult);
+
+                txObject = {
+                    to: contractAddress,
+                    data: '0x313ce567', // 代币合约中的 decimals 方法的哈希
+                };
+                var decimalsResult = await web3.eth.call(txObject);
+                const decimals = parseInt(decimalsResult, 16);
+
+                let weiName = this.getWeiName(decimals);
+                let tokenBalance = web3.utils.fromWei(balance, weiName);
+
+                txObject = {
+                    to: contractAddress,
+                    data: '0x95d89b41', // zkSync 合约中的 symbol 函数的方法签名
+                };
+                var symbolResult = await web3.eth.call(txObject);
+                const symbolHex = web3.utils.hexToAscii(symbolResult);
+                const symbol = symbolHex.replace(/\u0000/g, '').trim(); // 删除末尾的 null 字符
+                balances.push({balance:tokenBalance,symbol:symbol,contract:contractAddress});
+            });
+
+            await Promise.all(contractPromises);
             return balances;
         },
         /*
@@ -209,7 +248,12 @@ app.controller("Web3Ctrl", function($timeout,$scope,dialogService,web3Tools) {
                 var mainbalance = await web3.eth.getBalance(currentAccount);
                 var etherBalance = web3.utils.fromWei(mainbalance, 'ether');
                 console.log(etherBalance, 2);
-                let tokensBalance = await web3Tools.getBatchTokenBalances(web3,$scope.tokens[chainId].subTokens, currentAccount);
+                let tokensBalance;
+                if(chainId === 324){
+                    tokensBalance = await web3Tools.getZkSyncEraBatchTokenBalances(web3,$scope.tokens[chainId].subTokens, currentAccount);
+                }else{
+                    tokensBalance = await web3Tools.getBatchTokenBalances(web3,$scope.tokens[chainId].subTokens, currentAccount);
+                }
                 var main = $scope.tokens[chainId];
                 var coins = {};
                 var total = 0;
