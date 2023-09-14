@@ -52,7 +52,7 @@ tokens[56].subTokens.push('0x29A5DaF6E3FDF964DEf07706eA1ABee7EC03D021'); //TLC
 tokens[56].subTokens.push('0xa75d9ca2a0a1D547409D82e1B06618EC284A2CeD'); //WMX
 
 tokens[137]={};
-tokens[137].Network = "https://polygon.meowrpc.com";
+tokens[137].Network = "https://polygon.rpc.blxrbdn.com";
 tokens[137].Main = "Polygon";
 tokens[137].Coin = "MATIC";
 tokens[137].CoinID = "matic-network";
