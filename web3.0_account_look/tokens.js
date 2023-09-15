@@ -62,6 +62,13 @@ tokens[137].subTokens.push('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'); //WMAT
 tokens[137].subTokens.push('0xBAC3368B5110f3a3ddA8B5a0F7B66EDb37C47AFe'); //AIPEPE
 tokens[137].subTokens.push('0x4193103fbd8eBdD4F50aCc37E024037E0a2392f9'); //AIWORDS
 
+tokens[204]={};
+tokens[204].Network = "https://opbnb-mainnet-rpc.bnbchain.org";
+tokens[204].Main = "opBNB";
+tokens[204].Coin = "BNB";
+tokens[204].CoinID = "binancecoin";
+tokens[204].subTokens = [];
+
 tokens[324]={};
 tokens[324].Network = "https://mainnet.era.zksync.io";
 tokens[324].Main = "zkSync Era";
