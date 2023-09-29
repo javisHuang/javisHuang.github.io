@@ -172,6 +172,7 @@ app.factory('web3Tools',function(fetchTools){
 })
 app.controller("Web3Ctrl", function($timeout,$scope,dialogService,web3Tools) {
         $scope.vs_currencies = "TWD";
+        $scope.coinsplit = "/#";
         function init(){
             $scope.tokens = tokens;
             $scope.isconnectMetamask = false;
@@ -274,9 +275,9 @@ app.controller("Web3Ctrl", function($timeout,$scope,dialogService,web3Tools) {
                 }
                 var contractsPrice = await web3Tools.getContractAddresses(asset_platforms_id,contracts.join(),vs_currencies);
                 for (const [key, value] of t) {
-                    coins[value.symbol] = {};
-                    coins[value.symbol].name = value.symbol;
-                    coins[value.symbol].balance = value.balance;
+                    coins[value.symbol+$scope.coinsplit+value.contract] = {};
+                    coins[value.symbol+$scope.coinsplit+value.contract].name = value.symbol;
+                    coins[value.symbol+$scope.coinsplit+value.contract].balance = value.balance;
                     var price=0;
                     var taddr = contractsPrice[value.contract.toLowerCase()];
                     if (taddr) {
@@ -285,8 +286,8 @@ app.controller("Web3Ctrl", function($timeout,$scope,dialogService,web3Tools) {
                             price = tmpprice;
                         }
                     }
-                    coins[value.symbol].value = price;
-                    total+=coins[value.symbol].balance*coins[value.symbol].value;
+                    coins[value.symbol+$scope.coinsplit+value.contract].value = price;
+                    total+=coins[value.symbol+$scope.coinsplit+value.contract].balance*coins[value.symbol+$scope.coinsplit+value.contract].value;
                     progress+=add;
                     $("#progressBar"+chainId).width(progress+"%");
                 }
