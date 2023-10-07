@@ -68,6 +68,8 @@ tokens[204].Main = "opBNB";
 tokens[204].Coin = "BNB";
 tokens[204].CoinID = "binancecoin";
 tokens[204].subTokens = [];
+tokens[204].subTokens.push('0x9e5AAC1Ba1a2e6aEd6b32689DFcF62A509Ca96f3'); //USDT
+tokens[204].subTokens.push('0xE7798f023fC62146e8Aa1b36Da45fb70855a77Ea'); //ETH
 
 tokens[324]={};
 tokens[324].Network = "https://mainnet.era.zksync.io";
@@ -86,6 +88,15 @@ tokens[324].subTokens.push('0x6De8c9C56722E6cE4d725b1c57cB85C9fd7f5aFF'); //ZL
 tokens[324].subTokens.push('0xCDb7D260c107499C80B4b748e8331c64595972a1'); //KAT
 tokens[324].subTokens.push('0x2844EC8A0C85F8F9B4ED4F04ef71eC8594907A0a'); //Nfomo
 
+tokens[1101]={};
+tokens[1101].Network = "https://zkevm-rpc.com";
+tokens[1101].Main = "Polygon zkEVM";
+tokens[1101].Coin = "ETH";
+tokens[1101].CoinID = "ethereum";
+tokens[1101].subTokens = [];
+tokens[1101].subTokens.push('0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035'); //USDC
+tokens[1101].subTokens.push('0x1E4a5963aBFD975d8c9021ce480b42188849D41d'); //USDT
+
 tokens[8453]={};
 tokens[8453].Network = "https://developer-access-mainnet.base.org";
 tokens[8453].Main = "BASE";
@@ -93,6 +104,8 @@ tokens[8453].Coin = "ETH";
 tokens[8453].CoinID = "ethereum";
 tokens[8453].subTokens = [];
 tokens[8453].subTokens.push('0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA'); //USDBC
+tokens[8453].subTokens.push('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'); //USDC
+tokens[8453].subTokens.push('0xc5fecC3a29Fb57B5024eEc8a2239d4621e111CBE'); //1INCH
 
 tokens[42161]={};
 tokens[42161].Network = "https://arbitrum.meowrpc.com";
@@ -118,6 +131,9 @@ tokens[42170].Main = "Arbitrum Nova";
 tokens[42170].Coin = "ETH";
 tokens[42170].CoinID = "ethereum";
 tokens[42170].subTokens = [];
+tokens[42170].subTokens.push('0xf823C3cD3CeBE0a1fA952ba88Dc9EEf8e0Bf46AD'); //ARB
+tokens[42170].subTokens.push('0x750ba8b76187092B0D1E87E28daaf484d1b5273b'); //USDC
+tokens[42170].subTokens.push('0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'); //DAI
 tokens[42170].subTokens.push('0xD88492b380bc26593aE032ABF12ea9B135Ed6534'); //nMKX
 tokens[42170].subTokens.push('0xAbDda01e54B894c760f69778a760624cCb159e01'); //XTM
 
@@ -127,3 +143,6 @@ tokens[59144].Main = "Linea";
 tokens[59144].Coin = "ETH";
 tokens[59144].CoinID = "ethereum";
 tokens[59144].subTokens = [];
+tokens[59144].subTokens.push('0x176211869cA2b568f2A7D4EE941E073a821EE1ff'); //USDC
+tokens[59144].subTokens.push('0xA219439258ca9da29E9Cc4cE5596924745e12B93'); //USDT
+tokens[59144].subTokens.push('0x4AF15ec2A0BD43Db75dd04E62FAA3B8EF36b00d5'); //DAI
