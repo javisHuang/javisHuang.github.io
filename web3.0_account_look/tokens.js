@@ -124,6 +124,7 @@ tokens[42161].subTokens.push('0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8'); //US
 tokens[42161].subTokens.push('0xaf88d065e77c8cC2239327C5EDb3A432268e5831'); //USDCE
 tokens[42161].subTokens.push('0x6fD58f5a2F3468e35fEb098b5F59F04157002407'); //POGAI
 tokens[42161].subTokens.push('0x1D987200dF3B744CFa9C14f713F5334CB4Bc4D5D'); //REKT
+tokens[42161].subTokens.push('0xafccb724e3aec1657fc9514e3e53a0e71e80622d'); //VKA
 
 tokens[42170]={};
 tokens[42170].Network = "https://arbitrum-nova.publicnode.com";
