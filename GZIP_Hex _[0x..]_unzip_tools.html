@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>GZIP Hex 解壓 UI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 100%; height: 150px; font-family: monospace; }
+    pre { background: #f0f0f0; padding: 10px; white-space: pre-wrap; word-break: break-word; }
+    button { padding: 10px 20px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>GZIP Hex / [0x..] 解壓工具</h2>
+  <textarea id="input" placeholder="貼上 [0x1f][0x8b]... 的資料"></textarea><br>
+  <button id="decompress">解壓</button>
+  <h3>結果</h3>
+  <pre id="output"></pre>
+
+  <script>
+    function parseRawHex(raw) {
+      const bytes = [];
+      const regex = /\[0x([0-9a-fA-F]+)\]|(.)/g;
+      let match;
+      while ((match = regex.exec(raw)) !== null) {
+        if (match[1]) {
+          bytes.push(parseInt(match[1], 16));
+        } else if (match[2]) {
+          bytes.push(match[2].charCodeAt(0));
+        }
+      }
+      return new Uint8Array(bytes);
+    }
+
+    document.getElementById('decompress').addEventListener('click', () => {
+      const rawData = document.getElementById('input').value.trim();
+      if (!rawData) {
+        alert("請貼上資料！");
+        return;
+      }
+
+      try {
+        const compressedData = parseRawHex(rawData);
+        const decompressedData = pako.ungzip(compressedData, { to: 'string' });
+        document.getElementById('output').textContent = decompressedData;
+      } catch (e) {
+        document.getElementById('output').textContent = "解壓失敗: " + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
