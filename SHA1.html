@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>SHA1 即時工具</title>
+    <style>
+        body { font-family: Arial; padding:20px; }
+        textarea { width:100%; height:120px; }
+        .result {
+            margin-top:20px;
+            word-break: break-all;
+            background:#f4f4f4;
+            padding:10px;
+            min-height:40px;
+            font-family: monospace;
+        }
+        .options {
+            margin-top:10px;
+        }
+        label { margin-right:15px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<h2>SHA1 即時產生工具</h2>
+
+<div>輸入字串：</div>
+<textarea id="input" placeholder="請輸入要計算的字串"></textarea>
+
+<div class="options">
+    <label>
+        <input type="radio" name="caseType" value="upper" checked>
+        大寫
+    </label>
+    <label>
+        <input type="radio" name="caseType" value="lower">
+        小寫
+    </label>
+</div>
+
+<div>SHA1 (Hex)：</div>
+<div class="result" id="output"></div>
+
+<script>
+    async function sha1Hex(str) {
+        const encoder = new TextEncoder(); // UTF-8
+        const data = encoder.encode(str);
+
+        const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    const inputEl = document.getElementById("input");
+    const outputEl = document.getElementById("output");
+    const caseOptions = document.getElementsByName("caseType");
+
+    let currentHash = "";
+
+    async function updateHash() {
+        const value = inputEl.value;
+
+        if (!value) {
+            outputEl.innerText = "";
+            currentHash = "";
+            return;
+        }
+
+        currentHash = await sha1Hex(value);
+        render();
+    }
+
+    function render() {
+        const selected = [...caseOptions].find(r => r.checked).value;
+
+        if (!currentHash) {
+            outputEl.innerText = "";
+            return;
+        }
+
+        if (selected === "upper") {
+            outputEl.innerText = currentHash.toUpperCase();
+        } else {
+            outputEl.innerText = currentHash.toLowerCase();
+        }
+    }
+
+    inputEl.addEventListener("input", updateHash);
+
+    caseOptions.forEach(radio => {
+        radio.addEventListener("change", render);
+    });
+</script>
+
+</body>
+</html>
