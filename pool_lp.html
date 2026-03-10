@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>糖漿池健康度計算器</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+        h2, h3 { margin-bottom: 10px; }
+        .card {
+            display: flex; flex-wrap: wrap; background: #fff; padding: 10px;
+            margin-bottom: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card input { margin: 5px; padding: 6px; width: 120px; border-radius: 4px; border: 1px solid #ccc; }
+        .card button { margin: 5px; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; background: #fff; border-radius: 6px; overflow: hidden; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: #e0e0e0; }
+        .delete-btn { background: #ff6666; color: #fff; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<h2>糖漿池健康度計算器</h2>
+
+<h3>新增糖漿池</h3>
+<div class="card" id="inputCard">
+    <input type="text" id="assetPair" placeholder="資產對" required>
+    <input type="number" step="0.01" id="fee" placeholder="手續費 (%)" required>
+    <input type="number" step="0.01" id="apr" placeholder="APR (%)" required>
+    <input type="number" step="0.01" id="tvl" placeholder="TVL ($)" required>
+    <input type="number" step="0.01" id="volume" placeholder="24H 交易量 ($)" required>
+    <button onclick="addPool()">新增池子</button>
+</div>
+
+<h3>池子列表</h3>
+<table id="poolTable">
+    <thead>
+    <tr>
+        <th>資產對</th>
+        <th>手續費</th>
+        <th>APR (%)</th>
+        <th>TVL ($)</th>
+        <th>24H 交易量 ($)</th>
+        <th>健康度</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<button onclick="calculateHealth()">計算健康度 & 排序</button>
+
+<script>
+    const maxTvl = 1000;
+    const defaultStability = 0.5;
+
+    // 初始化：載入 localStorage
+    let pools = JSON.parse(localStorage.getItem('pools') || '[]');
+    renderTable();
+
+    // 新增池子
+    function addPool() {
+        const assetPair = document.getElementById('assetPair').value.trim();
+        const fee = document.getElementById('fee').value;
+        const apr = document.getElementById('apr').value;
+        const tvl = document.getElementById('tvl').value;
+        const volume = document.getElementById('volume').value;
+
+        if (!assetPair || fee === '' || apr === '' || tvl === '' || volume === '') {
+            alert('請完整填寫所有欄位！');
+            return;
+        }
+
+        const pool = { assetPair, fee: parseFloat(fee), apr: parseFloat(apr), tvl: parseFloat(tvl), volume: parseFloat(volume) };
+        pools.push(pool);
+        savePools();
+        renderTable();
+
+        // 清空輸入欄位
+        document.getElementById('assetPair').value = '';
+        document.getElementById('fee').value = '';
+        document.getElementById('apr').value = '';
+        document.getElementById('tvl').value = '';
+        document.getElementById('volume').value = '';
+    }
+
+    // 儲存到 localStorage
+    function savePools() {
+        localStorage.setItem('pools', JSON.stringify(pools));
+    }
+
+    // 渲染表格
+    function renderTable() {
+        const table = document.getElementById('poolTable').getElementsByTagName('tbody')[0];
+        table.innerHTML = '';
+
+        pools.forEach((pool, index) => {
+            const row = table.insertRow();
+            row.insertCell(0).textContent = pool.assetPair;
+            row.insertCell(1).textContent = pool.fee.toFixed(2) + '%';
+            row.insertCell(2).textContent = pool.apr.toFixed(2);
+            row.insertCell(3).textContent = pool.tvl.toFixed(2);
+            row.insertCell(4).textContent = pool.volume.toFixed(2);
+            row.insertCell(5).textContent = ''; // 健康度留空，按鈕計算後填
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '刪除';
+            delBtn.className = 'delete-btn';
+            delBtn.onclick = () => deletePool(index);
+            row.insertCell(6).appendChild(delBtn);
+        });
+    }
+
+    // 刪除池子
+    function deletePool(index) {
+        if (confirm('確定要刪除這個池子嗎？')) {
+            pools.splice(index, 1);
+            savePools();
+            renderTable();
+        }
+    }
+
+    // 計算健康度
+    function calculateHealth() {
+        pools.forEach(pool => {
+            const activity = pool.volume / pool.tvl;
+            const tvlScore = pool.tvl / maxTvl;
+            pool.health = 0.4 * activity + 0.3 * (pool.apr/100) + 0.2 * tvlScore + 0.1 * defaultStability;
+        });
+
+        // 按健康度排序
+        pools.sort((a, b) => (b.health || 0) - (a.health || 0));
+        savePools();
+        renderTable();
+
+        // 顯示健康度
+        const table = document.getElementById('poolTable').getElementsByTagName('tbody')[0];
+        Array.from(table.rows).forEach((row, i) => {
+            row.cells[5].textContent = pools[i].health.toFixed(2);
+        });
+    }
+</script>
+
+</body>
+</html>
