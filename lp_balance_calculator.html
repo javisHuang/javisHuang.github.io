@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>LP 平衡計算器（剩餘數量版）</title>
+<style>
+body { font-family: Arial; padding:20px; max-width:600px; margin:auto;}
+input { width:100%; padding:8px; margin:5px 0;}
+button { padding:10px; width:100%;}
+.result { margin-top:20px; background:#f3f3f3; padding:15px;}
+</style>
+</head>
+<body>
+
+<h2>LP 平衡計算器（剩餘數量版）</h2>
+
+<label>Token A 數量</label>
+<input id="amountA" type="number" step="any">
+
+<label>Token A 價格 (USDT)</label>
+<input id="priceA" type="number" step="any">
+
+<label>Token B 數量</label>
+<input id="amountB" type="number" step="any">
+
+<label>Token B 價格 (USDT)</label>
+<input id="priceB" type="number" step="any">
+
+<label>最低價格 (TokenB per TokenA)</label>
+<input id="minPrice" type="number" step="any">
+
+<label>最高價格 (TokenB per TokenA)</label>
+<input id="maxPrice" type="number" step="any">
+
+<label>當前價格 (TokenB per TokenA)</label>
+<input id="currentPrice" type="number" step="any">
+
+<button onclick="calculate()">計算平衡</button>
+
+<div class="result" id="result"></div>
+
+<script>
+function calculate() {
+    let amountA = parseFloat(document.getElementById("amountA").value);
+    let priceA = parseFloat(document.getElementById("priceA").value);
+    let amountB = parseFloat(document.getElementById("amountB").value);
+    let priceB = parseFloat(document.getElementById("priceB").value);
+    let minPrice = parseFloat(document.getElementById("minPrice").value);
+    let maxPrice = parseFloat(document.getElementById("maxPrice").value);
+    let currentPrice = parseFloat(document.getElementById("currentPrice").value);
+
+    if (!amountA || !priceA || !amountB || !priceB || !minPrice || !maxPrice || !currentPrice) {
+        alert("請填寫完整");
+        return;
+    }
+
+    let valueA = amountA * priceA;
+    let valueB = amountB * priceB;
+    let total = valueA + valueB;
+
+    let result = `A 價值: ${valueA.toFixed(2)} USDT<br>B 價值: ${valueB.toFixed(2)} USDT<br>總資產: ${total.toFixed(2)} USDT<hr>`;
+
+    let remainingA = amountA;
+    let remainingB = amountB;
+
+    if(currentPrice < minPrice){
+        result += `📉 當前價格低於區間最低價<br>✅ 建議只提供 Token A`;
+    } else if(currentPrice > maxPrice){
+        result += `📈 當前價格高於區間最高價<br>✅ 建議只提供 Token B`;
+    } else {
+        let target = total / 2;
+        let diff = valueA - target;
+        if (Math.abs(diff) < 0.01) {
+            result += "✅ 已經平衡，可以直接提供 LP";
+        } else if (diff > 0) {
+            // A 過多 → 賣出 A 換 B
+            let sellA = diff / priceA;
+            remainingA = amountA - sellA;
+            let addB = diff / priceB;
+            remainingB = amountB + addB;
+            result += `A 過多<br>👉 建議賣出 A: <b>${sellA.toFixed(6)}</b><br>換成 B 價值: ${diff.toFixed(2)} USDT<br>`;
+            result += `💰 賣出後剩餘 A: ${remainingA.toFixed(6)}，B: ${remainingB.toFixed(6)}`;
+        } else {
+            // B 過多 → 賣出 B 換 A
+            let sellB = (-diff) / priceB;
+            remainingB = amountB - sellB;
+            let addA = (-diff) / priceA;
+            remainingA = amountA + addA;
+            result += `B 過多<br>👉 建議賣出 B: <b>${sellB.toFixed(6)}</b><br>換成 A 價值: ${(-diff).toFixed(2)} USDT<br>`;
+            result += `💰 賣出後剩餘 A: ${remainingA.toFixed(6)}，B: ${remainingB.toFixed(6)}`;
+        }
+    }
+
+    document.getElementById("result").innerHTML = result;
+}
+</script>
+
+</body>
+</html>
