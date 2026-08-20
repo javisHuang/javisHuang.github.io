@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Crypto 質押借幣計算器</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans TC",
+        sans-serif;
+
+    background: #0b1020;
+    color: #f5f7ff;
+}
+
+.container {
+    width: min(1100px, 94%);
+    margin: 40px auto;
+}
+
+/* =========================
+   Header
+========================= */
+
+.header {
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+}
+
+.header p {
+    margin: 0;
+    color: #9ba6bd;
+}
+
+/* =========================
+   API Status
+========================= */
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 20px;
+
+    color: #aeb8cd;
+    font-size: 14px;
+}
+
+.dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #48d597;
+}
+
+/* =========================
+   Layout
+========================= */
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: #151c31;
+    border: 1px solid #29324d;
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.2);
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+/* =========================
+   Form
+========================= */
+
+.field {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #aeb8cd;
+
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border-radius: 10px;
+
+    border: 1px solid #35405f;
+
+    background: #0e1528;
+
+    color: white;
+
+    font-size: 16px;
+
+    outline: none;
+}
+
+input:focus {
+    border-color: #6c8cff;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* =========================
+   Coin Search
+========================= */
+
+.coin-selector {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.coin-input-wrapper {
+    position: relative;
+}
+
+.coin-search {
+    padding-left: 42px;
+}
+
+.search-icon {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #77839d;
+
+    pointer-events: none;
+
+    font-size: 17px;
+}
+
+.coin-dropdown {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    top: calc(100% + 5px);
+
+    max-height: 320px;
+
+    overflow-y: auto;
+
+    background: #11182b;
+
+    border: 1px solid #35405f;
+
+    border-radius: 12px;
+
+    z-index: 1000;
+
+    display: none;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.4);
+}
+
+.coin-dropdown.show {
+    display: block;
+}
+
+.coin-option {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 11px 14px;
+
+    cursor: pointer;
+
+    border-bottom:
+        1px solid #202a43;
+
+    transition: background .15s;
+}
+
+.coin-option:last-child {
+    border-bottom: none;
+}
+
+.coin-option:hover {
+    background: #202a45;
+}
+
+.coin-icon {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #202a43;
+
+    color: #fff;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+.coin-info {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.coin-symbol {
+    font-size: 15px;
+
+    font-weight: 700;
+}
+
+.coin-name {
+    font-size: 12px;
+
+    color: #8792aa;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.coin-price {
+    margin-left: auto;
+
+    font-size: 13px;
+
+    color: #8fd8be;
+
+    white-space: nowrap;
+}
+
+.selected-coin {
+    margin-top: 8px;
+
+    padding: 9px 12px;
+
+    background: #121a2d;
+
+    border-radius: 8px;
+
+    color: #9fe1cc;
+
+    font-size: 14px;
+}
+
+/* =========================
+   Price
+========================= */
+
+.price {
+    color: #7fdbb8;
+
+    font-size: 13px;
+
+    margin-top: 5px;
+}
+
+/* =========================
+   Buttons
+========================= */
+
+button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: 0;
+
+    border-radius: 11px;
+
+    background: #5875ff;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: .15s;
+}
+
+button:hover {
+    background: #6d87ff;
+}
+
+.secondary {
+    background: #252e48;
+
+    margin-top: 10px;
+}
+
+.secondary:hover {
+    background: #303b5a;
+}
+
+/* =========================
+   Results
+========================= */
+
+.result-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 14px;
+}
+
+.result {
+    background: #0e1528;
+
+    border: 1px solid #29324d;
+
+    border-radius: 13px;
+
+    padding: 16px;
+}
+
+.result .title {
+    font-size: 13px;
+
+    color: #929db5;
+
+    margin-bottom: 7px;
+}
+
+.result .value {
+    font-size: 20px;
+
+    font-weight: 700;
+
+    word-break: break-word;
+}
+
+.highlight {
+    background: #1a2340;
+
+    border-color: #536bca;
+}
+
+/* =========================
+   Risk
+========================= */
+
+.warning {
+    margin-top: 18px;
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    background: #2b2417;
+
+    border: 1px solid #655126;
+
+    color: #e9d28d;
+
+    line-height: 1.6;
+}
+
+.safe {
+    background: #142a25;
+
+    border-color: #2e6658;
+
+    color: #9ce3d0;
+}
+
+.danger {
+    background: #321c25;
+
+    border-color: #71384b;
+
+    color: #ff9eb5;
+}
+
+.error {
+    color: #ff819b;
+
+    margin-top: 10px;
+
+    font-size: 14px;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.footer {
+    margin-top: 25px;
+
+    color: #707b94;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media(max-width: 750px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .row {
+        grid-template-columns: 1fr;
+    }
+
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 26px;
+    }
+
+    .container {
+        margin: 25px auto;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- =========================
+         Header
+    ========================== -->
+
+    <div class="header">
+
+        <h1>
+            🔐 Crypto 質押借幣計算器
+        </h1>
+
+        <p>
+            選擇抵押資產與借款資產，
+            使用即時行情計算 LTV、最大可借與清算價格。
+        </p>
+
+    </div>
+
+
+    <!-- =========================
+         API Status
+    ========================== -->
+
+    <div class="status">
+
+        <span class="dot"></span>
+
+        <span id="apiStatus">
+            正在取得 Binance 公開行情...
+        </span>
+
+    </div>
+
+
+    <div class="grid">
+
+
+        <!-- =========================
+             LEFT
+        ========================== -->
+
+        <div class="card">
+
+            <h2>
+                抵押與借款
+            </h2>
+
+
+            <!-- =========================
+                 Collateral
+            ========================== -->
+
+            <div class="coin-selector">
+
+                <label>
+                    抵押資產
+                </label>
+
+                <div class="coin-input-wrapper">
+
+                    <span class="search-icon">
+                        🔍
+                    </span>
+
+                    <input
+                        type="text"
+                        id="collateralSearch"
+                        class="coin-search"
+                        placeholder="搜尋 BTC、Bitcoin..."
+                        autocomplete="off"
+                    >
+
+                    <div
+                        id="collateralDropdown"
+                        class="coin-dropdown"
+                    ></div>
+
+                </div>
+
+
+                <input
+                    type="hidden"
+                    id="collateral"
+                    value="BTC"
+                >
+
+
+                <div
+                    class="selected-coin"
+                    id="collateralSelected"
+                >
+                    BTC — Bitcoin
+                </div>
+
+
+                <div
+                    class="price"
+                    id="collateralPrice"
+                >
+                    價格：--
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 Collateral Amount
+            ========================== -->
+
+            <div class="field">
+
+                <label>
+                    抵押數量
+                </label>
+
+                <input
+                    id="collateralAmount"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="1"
+                    placeholder="例如：1"
+                >
+
+            </div>
+
+
+            <!-- =========================
+                 Borrow Coin
+            ========================== -->
+
+            <div class="coin-selector">
+
+                <label>
+                    借款資產
+                </label>
+
+                <div class="coin-input-wrapper">
+
+                    <span class="search-icon">
+                        🔍
+                    </span>
+
+                    <input
+                        type="text"
+                        id="borrowSearch"
+                        class="coin-search"
+                        placeholder="搜尋 USDT、USDC..."
+                        autocomplete="off"
+                    >
+
+                    <div
+                        id="borrowDropdown"
+                        class="coin-dropdown"
+                    ></div>
+
+                </div>
+
+
+                <input
+                    type="hidden"
+                    id="borrow"
+                    value="USDT"
+                >
+
+
+                <div
+                    class="selected-coin"
+                    id="borrowSelected"
+                >
+                    USDT — Tether
+                </div>
+
+
+                <div
+                    class="price"
+                    id="borrowPrice"
+                >
+                    價格：--
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 Borrow Amount
+            ========================== -->
+
+            <div class="field">
+
+                <label>
+                    預計借款數量
+                </label>
+
+                <input
+                    id="borrowAmount"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value="0"
+                    placeholder="例如：50000"
+                >
+
+            </div>
+
+
+            <!-- =========================
+                 LTV
+            ========================== -->
+
+            <div class="row">
+
+                <div class="field">
+
+                    <label>
+                        最大 LTV (%)
+                    </label>
+
+                    <input
+                        id="maxLtv"
+                        type="number"
+                        min="1"
+                        max="99"
+                        step="0.1"
+                        value="70"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        清算 LTV (%)
+                    </label>
+
+                    <input
+                        id="liquidationLtv"
+                        type="number"
+                        min="1"
+                        max="100"
+                        step="0.1"
+                        value="80"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 Buttons
+            ========================== -->
+
+            <button onclick="calculate()">
+
+                立即計算
+
+            </button>
+
+
+            <button
+                class="secondary"
+                onclick="refreshPrices()"
+            >
+
+                ↻ 更新即時價格
+
+            </button>
+
+
+            <div
+                id="error"
+                class="error"
+            ></div>
+
+        </div>
+
+
+
+        <!-- =========================
+             RIGHT
+        ========================== -->
+
+        <div class="card">
+
+            <h2>
+                計算結果
+            </h2>
+
+
+            <div class="result-grid">
+
+
+                <div class="result">
+
+                    <div class="title">
+                        抵押品價值
+                    </div>
+
+                    <div
+                        class="value"
+                        id="collateralValue"
+                    >
+                        $0
+                    </div>
+
+                </div>
+
+
+                <div class="result">
+
+                    <div class="title">
+                        目前借款價值
+                    </div>
+
+                    <div
+                        class="value"
+                        id="borrowValue"
+                    >
+                        $0
+                    </div>
+
+                </div>
+
+
+                <div class="result highlight">
+
+                    <div class="title">
+                        目前 LTV
+                    </div>
+
+                    <div
+                        class="value"
+                        id="currentLtv"
+                    >
+                        0%
+                    </div>
+
+                </div>
+
+
+                <div class="result highlight">
+
+                    <div class="title">
+                        最大可借價值
+                    </div>
+
+                    <div
+                        class="value"
+                        id="maxBorrowValue"
+                    >
+                        $0
+                    </div>
+
+                </div>
+
+
+                <div class="result">
+
+                    <div class="title">
+                        最大可借數量
+                    </div>
+
+                    <div
+                        class="value"
+                        id="maxBorrowAmount"
+                    >
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="result">
+
+                    <div class="title">
+                        剩餘可借價值
+                    </div>
+
+                    <div
+                        class="value"
+                        id="remainingBorrow"
+                    >
+                        $0
+                    </div>
+
+                </div>
+
+
+                <div class="result highlight">
+
+                    <div class="title">
+                        清算價格
+                    </div>
+
+                    <div
+                        class="value"
+                        id="liquidationPrice"
+                    >
+                        $0
+                    </div>
+
+                </div>
+
+
+                <div class="result">
+
+                    <div class="title">
+                        距離清算跌幅
+                    </div>
+
+                    <div
+                        class="value"
+                        id="liquidationDrop"
+                    >
+                        0%
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="riskMessage"
+                class="warning"
+            >
+                請輸入抵押數量與借款數量。
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         Footer
+    ========================== -->
+
+    <div class="footer">
+
+        ⚠️ 注意：
+        本工具是估算器，不代表任何交易所或借貸協議的實際風控參數。
+
+        真實借貸可能受到：
+
+        資產種類、
+        流動性、
+        利率、
+        LTV、
+        清算獎勵、
+        Oracle 價格、
+        市場波動
+
+        等因素影響。
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   Binance API
+========================================================= */
+
+const API_BASE =
+    "https://api.binance.com";
+
+
+/* =========================================================
+   Global Data
+========================================================= */
+
+let prices = {};
+
+let symbols = [];
+
+let marketInfo = {};
+
+
+/* =========================================================
+   Coin Names
+   常用幣種名稱
+========================================================= */
+
+const coinNames = {
+
+    BTC: "Bitcoin",
+    ETH: "Ethereum",
+    BNB: "BNB",
+    SOL: "Solana",
+    XRP: "XRP",
+    ADA: "Cardano",
+    DOGE: "Dogecoin",
+    AVAX: "Avalanche",
+    DOT: "Polkadot",
+    LINK: "Chainlink",
+    LTC: "Litecoin",
+    BCH: "Bitcoin Cash",
+    TRX: "TRON",
+    SHIB: "Shiba Inu",
+    UNI: "Uniswap",
+    AAVE: "Aave",
+    USDT: "Tether",
+    USDC: "USD Coin",
+    DAI: "Dai",
+    TON: "Toncoin",
+    SUI: "Sui",
+    NEAR: "NEAR Protocol",
+    ATOM: "Cosmos",
+    FIL: "Filecoin",
+    ARB: "Arbitrum",
+    OP: "Optimism",
+    PEPE: "Pepe",
+    WIF: "dogwifhat"
+
+};
+
+
+/* =========================================================
+   Coin Icons
+========================================================= */
+
+const coinIcons = {
+
+    BTC: "₿",
+    ETH: "Ξ",
+    BNB: "BNB",
+    SOL: "S",
+    XRP: "X",
+    ADA: "A",
+    DOGE: "Ð",
+    AVAX: "A",
+    DOT: "D",
+    LINK: "L",
+    LTC: "Ł",
+    BCH: "B",
+    TRX: "T",
+    SHIB: "S",
+    UNI: "U",
+    AAVE: "A",
+    USDT: "₮",
+    USDC: "$",
+    DAI: "D",
+    TON: "T",
+    SUI: "S",
+    NEAR: "N",
+    ATOM: "A",
+    FIL: "F",
+    ARB: "A",
+    OP: "O",
+    PEPE: "P",
+    WIF: "W"
+
+};
+
+
+/* =========================================================
+   Load Binance Markets
+========================================================= */
+
+async function loadMarkets() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/v3/exchangeInfo`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "無法取得交易所資料"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        /*
+            只抓 USDT 交易對。
+
+            例如：
+
+            BTCUSDT
+            ETHUSDT
+            SOLUSDT
+        */
+
+        data.symbols.forEach(item => {
+
+            if (
+                item.status === "TRADING" &&
+                item.quoteAsset === "USDT"
+            ) {
+
+                const symbol =
+                    item.baseAsset;
+
+
+                if (!symbols.includes(symbol)) {
+
+                    symbols.push(symbol);
+
+                }
+
+
+                marketInfo[symbol] = item;
+
+            }
+
+        });
+
+
+        symbols.sort();
+
+
+        /*
+            初始化搜尋器
+        */
+
+        setupCoinSearch({
+
+            searchId:
+                "collateralSearch",
+
+            dropdownId:
+                "collateralDropdown",
+
+            hiddenId:
+                "collateral",
+
+            selectedId:
+                "collateralSelected",
+
+            defaultCoin:
+                "BTC"
+
+        });
+
+
+        setupCoinSearch({
+
+            searchId:
+                "borrowSearch",
+
+            dropdownId:
+                "borrowDropdown",
+
+            hiddenId:
+                "borrow",
+
+            selectedId:
+                "borrowSelected",
+
+            defaultCoin:
+                "USDT"
+
+        });
+
+
+        await refreshPrices();
+
+
+        document.getElementById(
+            "apiStatus"
+        ).textContent =
+            "Binance 公開行情連線正常";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        document.getElementById(
+            "apiStatus"
+        ).textContent =
+            "API 連線失敗";
+
+
+        document.getElementById(
+            "error"
+        ).textContent =
+            "無法取得 Binance 公開 API，請確認網路或稍後再試。";
+
+    }
+
+}
+
+
+/* =========================================================
+   Coin Search
+========================================================= */
+
+function setupCoinSearch({
+
+    searchId,
+    dropdownId,
+    hiddenId,
+    selectedId,
+    defaultCoin
+
+}) {
+
+    const search =
+        document.getElementById(
+            searchId
+        );
+
+
+    const dropdown =
+        document.getElementById(
+            dropdownId
+        );
+
+
+    const hidden =
+        document.getElementById(
+            hiddenId
+        );
+
+
+    const selected =
+        document.getElementById(
+            selectedId
+        );
+
+
+    /*
+        Render 搜尋結果
+    */
+
+    function renderCoins(keyword = "") {
+
+        keyword =
+            keyword
+                .trim()
+                .toLowerCase();
+
+
+        /*
+            搜尋：
+
+            BTC
+            bitcoin
+            bit
+
+            都可以
+        */
+
+        const results =
+            symbols
+                .filter(symbol => {
+
+                    const name =
+                        coinNames[symbol] ||
+                        symbol;
+
+
+                    return (
+
+                        symbol
+                            .toLowerCase()
+                            .includes(keyword)
+
+                        ||
+
+                        name
+                            .toLowerCase()
+                            .includes(keyword)
+
+                    );
+
+                })
+                .slice(0, 60);
+
+
+        dropdown.innerHTML = "";
+
+
+        if (
+            results.length === 0
+        ) {
+
+            dropdown.innerHTML = `
+                <div class="coin-option">
+                    找不到符合的幣種
+                </div>
+            `;
+
+            dropdown.classList.add(
+                "show"
+            );
+
+            return;
+
+        }
+
+
+        results.forEach(
+            symbol => {
+
+                const name =
+                    coinNames[symbol] ||
+                    symbol;
+
+
+                const price =
+                    prices[symbol];
+
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                item.className =
+                    "coin-option";
+
+
+                const icon =
+                    coinIcons[symbol] ||
+                    symbol.substring(
+                        0,
+                        1
+                    );
+
+
+                item.innerHTML = `
+
+                    <div class="coin-icon">
+                        ${icon}
+                    </div>
+
+                    <div class="coin-info">
+
+                        <div class="coin-symbol">
+                            ${symbol}
+                        </div>
+
+                        <div class="coin-name">
+                            ${name}
+                        </div>
+
+                    </div>
+
+                    <div class="coin-price">
+
+                        ${
+                            price
+                                ? "$" +
+                                  formatNumber(
+                                      price
+                                  )
+                                : "--"
+                        }
+
+                    </div>
+
+                `;
+
+
+                item.addEventListener(
+                    "click",
+                    () => {
+
+                        hidden.value =
+                            symbol;
+
+
+                        selected.innerHTML =
+                            `
+                            ${icon}
+                            ${symbol}
+                            — ${name}
+                            `;
+
+
+                        search.value =
+                            "";
+
+
+                        dropdown.classList
+                            .remove(
+                                "show"
+                            );
+
+
+                        updatePriceLabels();
+
+                        calculate();
+
+                    }
+                );
+
+
+                dropdown.appendChild(
+                    item
+                );
+
+            }
+        );
+
+
+        dropdown.classList.add(
+            "show"
+        );
+
+    }
+
+
+    /*
+        點搜尋框
+    */
+
+    search.addEventListener(
+        "focus",
+        () => {
+
+            renderCoins(
+                search.value
+            );
+
+        }
+    );
+
+
+    /*
+        輸入搜尋
+    */
+
+    search.addEventListener(
+        "input",
+        () => {
+
+            renderCoins(
+                search.value
+            );
+
+        }
+    );
+
+
+    /*
+        ESC 關閉
+    */
+
+    search.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                dropdown.classList
+                    .remove(
+                        "show"
+                    );
+
+                search.blur();
+
+            }
+
+        }
+    );
+
+
+    /*
+        點外面關閉
+    */
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            if (
+                !event.target.closest(
+                    ".coin-selector"
+                )
+            ) {
+
+                dropdown.classList
+                    .remove(
+                        "show"
+                    );
+
+            }
+
+        }
+    );
+
+
+    /*
+        預設幣
+    */
+
+    hidden.value =
+        defaultCoin;
+
+
+    const defaultName =
+        coinNames[defaultCoin] ||
+        defaultCoin;
+
+
+    const defaultIcon =
+        coinIcons[defaultCoin] ||
+        defaultCoin.substring(
+            0,
+            1
+        );
+
+
+    selected.innerHTML =
+        `
+        ${defaultIcon}
+        ${defaultCoin}
+        — ${defaultName}
+        `;
+
+}
+
+
+/* =========================================================
+   Refresh Prices
+========================================================= */
+
+async function refreshPrices() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/v3/ticker/price`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "價格 API 錯誤"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        prices = {};
+
+
+        data.forEach(
+            item => {
+
+                if (
+                    item.symbol.endsWith(
+                        "USDT"
+                    )
+                ) {
+
+                    const base =
+                        item.symbol.replace(
+                            "USDT",
+                            ""
+                        );
+
+
+                    prices[base] =
+                        Number(
+                            item.price
+                        );
+
+                }
+
+            }
+        );
+
+
+        updatePriceLabels();
+
+
+        calculate();
+
+
+        document.getElementById(
+            "apiStatus"
+        ).textContent =
+            "價格已更新：" +
+            new Date()
+                .toLocaleTimeString();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        document.getElementById(
+            "error"
+        ).textContent =
+            "取得價格失敗：" +
+            error.message;
+
+    }
+
+}
+
+
+/* =========================================================
+   Update Price Labels
+========================================================= */
+
+function updatePriceLabels() {
+
+    const collateral =
+        document.getElementById(
+            "collateral"
+        ).value;
+
+
+    const borrow =
+        document.getElementById(
+            "borrow"
+        ).value;
+
+
+    const collateralPrice =
+        prices[collateral];
+
+
+    const borrowPrice =
+        prices[borrow];
+
+
+    document.getElementById(
+        "collateralPrice"
+    ).textContent =
+
+        collateralPrice
+
+            ? `價格：$${formatNumber(
+                collateralPrice
+            )}`
+
+            : "價格：--";
+
+
+    document.getElementById(
+        "borrowPrice"
+    ).textContent =
+
+        borrowPrice
+
+            ? `價格：$${formatNumber(
+                borrowPrice
+            )}`
+
+            : "價格：--";
+
+}
+
+
+/* =========================================================
+   Calculate
+========================================================= */
+
+function calculate() {
+
+    const collateral =
+        document.getElementById(
+            "collateral"
+        ).value;
+
+
+    const borrow =
+        document.getElementById(
+            "borrow"
+        ).value;
+
+
+    const collateralAmount =
+        Number(
+            document.getElementById(
+                "collateralAmount"
+            ).value
+        );
+
+
+    const borrowAmount =
+        Number(
+            document.getElementById(
+                "borrowAmount"
+            ).value
+        );
+
+
+    const maxLtv =
+        Number(
+            document.getElementById(
+                "maxLtv"
+            ).value
+        ) / 100;
+
+
+    const liquidationLtv =
+        Number(
+            document.getElementById(
+                "liquidationLtv"
+            ).value
+        ) / 100;
+
+
+    const collateralPrice =
+        prices[collateral];
+
+
+    const borrowPrice =
+        prices[borrow];
+
+
+    /*
+        防呆
+    */
+
+    if (
+        !collateralPrice ||
+        !borrowPrice
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !collateralAmount ||
+        collateralAmount <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        抵押品 USD 價值
+    */
+
+    const collateralValue =
+        collateralAmount *
+        collateralPrice;
+
+
+    /*
+        借款 USD 價值
+    */
+
+    const borrowValue =
+        borrowAmount *
+        borrowPrice;
+
+
+    /*
+        最大借款價值
+    */
+
+    const maxBorrowValue =
+        collateralValue *
+        maxLtv;
+
+
+    /*
+        最大借款數量
+    */
+
+    const maxBorrowAmount =
+        maxBorrowValue /
+        borrowPrice;
+
+
+    /*
+        目前 LTV
+    */
+
+    const currentLtv =
+        collateralValue > 0
+
+            ? borrowValue /
+              collateralValue
+
+            : 0;
+
+
+    /*
+        剩餘可以借
+    */
+
+    const remainingBorrow =
+        Math.max(
+            0,
+            maxBorrowValue -
+            borrowValue
+        );
+
+
+    /*
+        清算價格
+
+        Borrow Value
+        ----------------
+        Collateral × Liquidation LTV
+    */
+
+    const liquidationPrice =
+        borrowValue > 0
+
+            ? borrowValue /
+              (
+                  collateralAmount *
+                  liquidationLtv
+              )
+
+            : 0;
+
+
+    /*
+        距離清算跌幅
+    */
+
+    const liquidationDrop =
+
+        collateralPrice > 0 &&
+        liquidationPrice > 0
+
+            ? 1 -
+              (
+                  liquidationPrice /
+                  collateralPrice
+              )
+
+            : 0;
+
+
+    /*
+        更新畫面
+    */
+
+    document.getElementById(
+        "collateralValue"
+    ).textContent =
+        "$" +
+        formatNumber(
+            collateralValue
+        );
+
+
+    document.getElementById(
+        "borrowValue"
+    ).textContent =
+        "$" +
+        formatNumber(
+            borrowValue
+        );
+
+
+    document.getElementById(
+        "currentLtv"
+    ).textContent =
+        formatPercent(
+            currentLtv
+        );
+
+
+    document.getElementById(
+        "maxBorrowValue"
+    ).textContent =
+        "$" +
+        formatNumber(
+            maxBorrowValue
+        );
+
+
+    document.getElementById(
+        "maxBorrowAmount"
+    ).textContent =
+        formatNumber(
+            maxBorrowAmount
+        ) +
+        " " +
+        borrow;
+
+
+    document.getElementById(
+        "remainingBorrow"
+    ).textContent =
+        "$" +
+        formatNumber(
+            remainingBorrow
+        );
+
+
+    document.getElementById(
+        "liquidationPrice"
+    ).textContent =
+
+        liquidationPrice > 0
+
+            ? "$" +
+              formatNumber(
+                  liquidationPrice
+              )
+
+            : "--";
+
+
+    document.getElementById(
+        "liquidationDrop"
+    ).textContent =
+
+        liquidationDrop > 0
+
+            ? formatPercent(
+                liquidationDrop
+              )
+
+            : "--";
+
+
+    /*
+        風險提示
+    */
+
+    const risk =
+        document.getElementById(
+            "riskMessage"
+        );
+
+
+    risk.className =
+        "warning";
+
+
+    if (
+        currentLtv >=
+        liquidationLtv
+    ) {
+
+        risk.classList.add(
+            "danger"
+        );
+
+
+        risk.textContent =
+            "🚨 已經達到或超過清算 LTV，理論上存在清算風險。";
+
+
+    } else if (
+        currentLtv >= maxLtv
+    ) {
+
+        risk.classList.add(
+            "danger"
+        );
+
+
+        risk.textContent =
+            "⚠️ 已達到最大 LTV，無法再增加借款。";
+
+
+    } else if (
+        currentLtv >=
+        maxLtv * 0.8
+    ) {
+
+        risk.textContent =
+            "⚠️ LTV 偏高。市場波動可能快速增加清算風險。";
+
+
+    } else {
+
+        risk.classList.add(
+            "safe"
+        );
+
+
+        risk.textContent =
+            "✓ 目前 LTV 尚低於設定的最大 LTV。";
+
+    }
+
+}
+
+
+/* =========================================================
+   Format Number
+========================================================= */
+
+function formatNumber(number) {
+
+    if (
+        !Number.isFinite(number)
+    ) {
+
+        return "0";
+
+    }
+
+
+    if (
+        number >= 1
+    ) {
+
+        return number.toLocaleString(
+            "en-US",
+            {
+                maximumFractionDigits: 6
+            }
+        );
+
+    }
+
+
+    return number.toLocaleString(
+        "en-US",
+        {
+            maximumFractionDigits: 10
+        }
+    );
+
+}
+
+
+/* =========================================================
+   Format Percentage
+========================================================= */
+
+function formatPercent(value) {
+
+    return (
+        value * 100
+    ).toFixed(2) + "%";
+
+}
+
+
+/* =========================================================
+   Input Events
+========================================================= */
+
+[
+    "collateralAmount",
+    "borrowAmount",
+    "maxLtv",
+    "liquidationLtv"
+
+].forEach(id => {
+
+    document.getElementById(id)
+        .addEventListener(
+            "input",
+            calculate
+        );
+
+});
+
+
+/* =========================================================
+   Auto Refresh
+========================================================= */
+
+setInterval(
+    refreshPrices,
+    30000
+);
+
+
+/* =========================================================
+   Start
+========================================================= */
+
+loadMarkets();
+
+</script>
+
+</body>
+</html>
