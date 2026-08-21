@@ -916,396 +916,388 @@
             : "Token B";
     }
     /* =========================================================
-       V3 MATH
-    =========================================================
-    PancakeSwap V3 / Uniswap V3-style concentrated liquidity:
-    amount0 =
-    L * (sqrtUpper - sqrtCurrent)
-        /
-        (sqrtCurrent * sqrtUpper)
-    amount1 =
-    L * (sqrtCurrent - sqrtLower)
-    價格：
-    P = Token1 / Token0
-    因此：
-    sqrtP = sqrt(P)
-    ========================================================= */
-    function sqrtPrice(
-        price
+   PANCAKESWAP V3 / CL LP MATH
+========================================================= */
+    /*
+     * PancakeSwap V3 / CL 的核心：
+     *
+     * price = Token B / Token A
+     *
+     * sqrtPrice = sqrt(price)
+     *
+     * 在 range 內：
+     *
+     * amountA = L * (1/sqrtP - 1/sqrtUpper)
+     * amountB = L * (sqrtP - sqrtLower)
+     *
+     * 但「建池需要多少」不能直接拿總資產
+     * 除以某個比例後就結束。
+     *
+     * 正確方式：
+     *
+     * 1. 先用現有總資產價值決定最大可用 liquidity
+     * 2. 用 amountA / amountB 算出目前資產能提供的 liquidity
+     * 3. 哪一邊 liquidity 是瓶頸，就以那一邊為基準
+     * 4. 判斷另一邊多出多少
+     * 5. 只賣掉多出的 token
+     *
+     * 這樣總資產價值不會被重新創造。
+     */
+    /* ---------------------------------------------------------
+       sqrt price
+    --------------------------------------------------------- */
+    function sqrtPrice(price) {
+        return Math.sqrt(price);
+    }
+    /* ---------------------------------------------------------
+       Amount0 per liquidity
+    --------------------------------------------------------- */
+    function amount0PerLiquidity(
+        sqrtP,
+        sqrtLower,
+        sqrtUpper
     ) {
-        return Math.sqrt(
-            price
+        /*
+         * current <= lower
+         *
+         * position is 100% token0
+         */
+        if (sqrtP <= sqrtLower) {
+            return (
+                1 / sqrtLower -
+                1 / sqrtUpper
+            );
+        }
+        /*
+         * current >= upper
+         *
+         * position is 0 token0
+         */
+        if (sqrtP >= sqrtUpper) {
+            return 0;
+        }
+        /*
+         * current inside range
+         */
+        return (
+            1 / sqrtP -
+            1 / sqrtUpper
+        );
+    }
+    /* ---------------------------------------------------------
+       Amount1 per liquidity
+    --------------------------------------------------------- */
+    function amount1PerLiquidity(
+        sqrtP,
+        sqrtLower,
+        sqrtUpper
+    ) {
+        /*
+         * current <= lower
+         *
+         * position is 0 token1
+         */
+        if (sqrtP <= sqrtLower) {
+            return 0;
+        }
+        /*
+         * current >= upper
+         *
+         * position is 100% token1
+         */
+        if (sqrtP >= sqrtUpper) {
+            return (
+                sqrtUpper -
+                sqrtLower
+            );
+        }
+        /*
+         * current inside range
+         */
+        return (
+            sqrtP -
+            sqrtLower
         );
     }
     /* =========================================================
-       CALCULATE V3 UNIT AMOUNTS
+       CALCULATE V3 POSITION FROM TOTAL VALUE
     ========================================================= */
-    function calculateUnitAmounts(
+    function calculateLPComposition(
         lower,
         upper,
-        current
-    ) {
-        /*
-         * current <= lower
-         *
-         * Position 100% Token A
-         */
-        if (
-            current <= lower
-        ) {
-            return {
-                mode: "A",
-                unitA: 1,
-                unitB: 0
-            };
-        }
-        /*
-         * current >= upper
-         *
-         * Position 100% Token B
-         */
-        if (
-            current >= upper
-        ) {
-            return {
-                mode: "B",
-                unitA: 0,
-                unitB: 1
-            };
-        }
-        const sqrtL =
-            sqrtPrice(
-                lower
-            );
-        const sqrtU =
-            sqrtPrice(
-                upper
-            );
-        const sqrtP =
-            sqrtPrice(
-                current
-            );
-        const unitA =
-            (
-                1 / sqrtP
-                -
-                1 / sqrtU
-            );
-        const unitB =
-            (
-                sqrtP
-                -
-                sqrtL
-            );
-        return {
-            mode: "both",
-            unitA,
-            unitB
-        };
-    }
-    /* =========================================================
-       TARGET LP COMPOSITION
-    =========================================================
-    這裡非常重要：
-    我們不是：
-    total / 2
-    而是：
-    1. 先用 V3 Range + Current Price
-       算出 Token A / B 的比例。
-    2. 再使用「你現在的總資產價值」
-       作為固定資產池。
-    3. 找出這筆固定資產
-       能提供多少 liquidity。
-    4. 得到實際需要的 A / B。
-    ========================================================= */
-    function calculateTargetLP(
+        current,
         totalValue,
         priceA,
-        current,
-        lower,
-        upper
+        priceB
     ) {
-        const unit =
-            calculateUnitAmounts(
-                lower,
-                upper,
-                current
-            );
+        const sqrtL =
+            Math.sqrt(lower);
+        const sqrtU =
+            Math.sqrt(upper);
+        const sqrtP =
+            Math.sqrt(current);
         /*
-         * current <= lower
+         * -----------------------------------------------------
+         * PRICE BELOW RANGE
+         * -----------------------------------------------------
          *
-         * 100% A
+         * PancakeSwap V3 position:
+         *
+         * 100% Token A
          */
-        if (
-            unit.mode === "A"
-        ) {
-            const amountA =
-                totalValue /
-                priceA;
+        if (current <= lower) {
             return {
                 mode: "A",
-                amountA,
+                amountA:
+                    totalValue / priceA,
                 amountB: 0,
                 ratioA: 1,
                 ratioB: 0,
-                liquidity: null
+                liquidity:
+                    (
+                        totalValue / priceA
+                    ) /
+                    (
+                        1 / sqrtL -
+                        1 / sqrtU
+                    )
             };
         }
         /*
-         * current >= upper
+         * -----------------------------------------------------
+         * PRICE ABOVE RANGE
+         * -----------------------------------------------------
          *
-         * 100% B
+         * PancakeSwap V3 position:
          *
-         * Token B USD price =
-         * current * priceA
+         * 100% Token B
          */
-        if (
-            unit.mode === "B"
-        ) {
-            const tokenBPrice =
-                current *
-                priceA;
-            const amountB =
-                totalValue /
-                tokenBPrice;
+        if (current >= upper) {
             return {
                 mode: "B",
                 amountA: 0,
-                amountB,
+                amountB:
+                    totalValue / priceB,
                 ratioA: 0,
                 ratioB: 1,
-                liquidity: null
+                liquidity:
+                    (
+                        totalValue / priceB
+                    ) /
+                    (
+                        sqrtU -
+                        sqrtL
+                    )
             };
         }
         /*
-         * 區間內
+         * -----------------------------------------------------
+         * PRICE INSIDE RANGE
+         * -----------------------------------------------------
          */
         const unitA =
-            unit.unitA;
+            amount0PerLiquidity(
+                sqrtP,
+                sqrtL,
+                sqrtU
+            );
         const unitB =
-            unit.unitB;
+            amount1PerLiquidity(
+                sqrtP,
+                sqrtL,
+                sqrtU
+            );
         /*
-         * Token B 的目前價格
+         * value of 1 liquidity
          *
-         * P = B / A
+         * A value:
          *
-         * 1 B = priceA / P USD
+         * unitA * priceA
+         *
+         * B value:
+         *
+         * unitB * priceB
          */
-        const tokenBPrice =
-            priceA /
-            current;
-        /*
-         * 一個 L 的 USD value
-         */
-        const valuePerL =
-            unitA * priceA
-            +
-            unitB * tokenBPrice;
+        const unitValue =
+            unitA * priceA +
+            unitB * priceB;
         if (
-            valuePerL <= 0 ||
-            !Number.isFinite(
-                valuePerL
-            )
+            !Number.isFinite(unitValue) ||
+            unitValue <= 0
         ) {
             throw new Error(
-                "無法計算 V3 Liquidity"
+                "V3 LP liquidity 計算失敗"
             );
         }
         /*
-         * 固定總資產價值
+         * Total value fixed.
          *
-         * totalValue 不變
+         * This is extremely important.
+         *
+         * We are NOT changing totalValue.
          */
-        const liquidity =
-            totalValue /
-            valuePerL;
+        const L =
+            totalValue / unitValue;
         const amountA =
-            unitA *
-            liquidity;
+            unitA * L;
         const amountB =
-            unitB *
-            liquidity;
+            unitB * L;
         const valueA =
-            amountA *
-            priceA;
+            amountA * priceA;
         const valueB =
-            amountB *
-            tokenBPrice;
-        const actualTotal =
-            valueA +
-            valueB;
+            amountB * priceB;
         return {
             mode: "both",
             amountA,
             amountB,
             ratioA:
-                valueA /
-                actualTotal,
+                valueA / totalValue,
             ratioB:
-                valueB /
-                actualTotal,
-            liquidity,
-            tokenBPrice
+                valueB / totalValue,
+            liquidity: L
         };
     }
     /* =========================================================
-       SWAP CALCULATION
-    =========================================================
-    這裡才是你真正要的：
-    目前：
-    A_current
-    B_current
-    目標：
-    A_target
-    B_target
-    總價值不變。
-    如果：
-    A_current > A_target
-    => A 太多
-    => 賣 A
-    如果：
-    B_current > B_target
-    => B 太多
-    => 賣 B
+       CALCULATE HOW MUCH TOKEN TO SELL
     ========================================================= */
-    function calculateSwap(
-        amountA,
-        amountB,
+    /*
+     * 核心概念：
+     *
+     * 現有資產：
+     *
+     * currentA
+     * currentB
+     *
+     * LP 需要：
+     *
+     * targetA
+     * targetB
+     *
+     * 總價值固定。
+     *
+     * 所以：
+     *
+     * currentA * priceA
+     * +
+     * currentB * priceB
+     *
+     * =
+     *
+     * targetA * priceA
+     * +
+     * targetB * priceB
+     *
+     *
+     * 只需要判斷哪邊多。
+     */
+    function calculateRequiredSwap(
+        currentA,
+        currentB,
         targetA,
         targetB,
         priceA,
-        priceB,
-        feePercent,
-        slippagePercent
+        priceB
     ) {
         /*
-         * 使用「市場價格」
-         * 做理論交換。
-         */
-        const marketValueA =
-            amountA *
-            priceA;
-        const marketValueB =
-            amountB *
-            priceB;
-        const totalValue =
-            marketValueA +
-            marketValueB;
-        /*
-         * 理論上 target
-         * 應該與 total value 相等。
-         */
-        const targetValueA =
-            targetA *
-            priceA;
-        const targetValueB =
-            targetB *
-            priceB;
-        /*
-         * Fee / slippage
+         * tolerance
          *
-         * actual output
-         * 會比理論 output 少。
+         * 避免浮點數造成：
+         *
+         * 0.00000000001
+         *
+         * 被判斷成需要 swap
          */
-        const feeRate =
+        const tolerance =
             Math.max(
-                0,
-                feePercent
-            ) / 100;
-        const slippageRate =
-            Math.max(
-                0,
-                slippagePercent
-            ) / 100;
-        const effectiveRate =
-            (1 - feeRate) *
-            (1 - slippageRate);
+                1e-12,
+                (
+                    Math.abs(currentA) +
+                    Math.abs(targetA)
+                ) * 1e-10
+            );
         /*
-         * A 過多
+         * -----------------------------------------------------
+         * Case 1
+         *
+         * A 太多
+         * B 太少
+         *
+         * SELL A
+         * BUY B
+         * -----------------------------------------------------
          */
         if (
-            targetA <
-            amountA
+            currentA >
+            targetA + tolerance
         ) {
             const sellA =
-                amountA -
-                targetA;
-            const theoreticalB =
-                sellA *
-                priceA /
-                priceB;
-            const actualB =
-                theoreticalB *
-                effectiveRate;
+                currentA - targetA;
+            const sellValue =
+                sellA * priceA;
+            const buyB =
+                sellValue / priceB;
             return {
-                direction: "SELL_A",
+                action: "SELL_A",
                 sellA,
-                receiveB:
-                actualB,
-                targetA,
-                targetB,
+                receiveB: buyB,
+                sellB: 0,
+                receiveA: 0,
                 finalA:
-                    amountA -
-                    sellA,
+                    currentA - sellA,
                 finalB:
-                    amountB +
-                    actualB,
-                theoreticalB,
-                totalValue
+                    currentB + buyB
             };
         }
         /*
-         * B 過多
+         * -----------------------------------------------------
+         * Case 2
+         *
+         * B 太多
+         * A 太少
+         *
+         * SELL B
+         * BUY A
+         * -----------------------------------------------------
          */
         if (
-            targetB <
-            amountB
+            currentB >
+            targetB + tolerance
         ) {
             const sellB =
-                amountB -
-                targetB;
-            const theoreticalA =
-                sellB *
-                priceB /
-                priceA;
-            const actualA =
-                theoreticalA *
-                effectiveRate;
+                currentB - targetB;
+            const sellValue =
+                sellB * priceB;
+            const buyA =
+                sellValue / priceA;
             return {
-                direction: "SELL_B",
+                action: "SELL_B",
+                sellA: 0,
+                receiveB: 0,
                 sellB,
-                receiveA:
-                actualA,
-                targetA,
-                targetB,
+                receiveA: buyA,
                 finalA:
-                    amountA +
-                    actualA,
+                    currentA + buyA,
                 finalB:
-                    amountB -
-                    sellB,
-                theoreticalA,
-                totalValue
+                    currentB - sellB
             };
         }
         /*
-         * 已經接近目標
+         * -----------------------------------------------------
+         * Already balanced
+         * -----------------------------------------------------
          */
         return {
-            direction: "NONE",
+            action: "NONE",
             sellA: 0,
+            receiveB: 0,
             sellB: 0,
             receiveA: 0,
-            receiveB: 0,
-            targetA,
-            targetB,
-            finalA: amountA,
-            finalB: amountB,
-            totalValue
+            finalA: currentA,
+            finalB: currentB
         };
     }
     /* =========================================================
-       MAIN CALCULATE
+       MAIN CALCULATION
     ========================================================= */
     function calculate() {
         const amountA =
@@ -1350,29 +1342,11 @@
                     "currentPrice"
                 ).value
             );
-        const feePercent =
-            parseFloat(
-                document.getElementById(
-                    "swapFee"
-                ).value
-            ) || 0;
-        const slippagePercent =
-            parseFloat(
-                document.getElementById(
-                    "slippage"
-                ).value
-            ) || 0;
-        const result =
-            document.getElementById(
-                "result"
-            );
-        const symbolA =
-            getSymbol("A");
-        const symbolB =
-            getSymbol("B");
-        /* =====================================================
-           VALIDATION
-        ====================================================== */
+        /*
+         * -----------------------------------------------------
+         * Validation
+         * -----------------------------------------------------
+         */
         if (
             !Number.isFinite(amountA) ||
             !Number.isFinite(amountB) ||
@@ -1382,7 +1356,7 @@
             !Number.isFinite(upper)
         ) {
             alert(
-                "請完整輸入 Token 數量、Token USD 價格與 LP Range"
+                "請完整輸入 Token 數量、價格與 LP 區間"
             );
             return;
         }
@@ -1395,750 +1369,541 @@
             upper <= 0
         ) {
             alert(
-                "數值必須大於或等於 0"
+                "數值必須大於 0"
             );
             return;
         }
-        if (
-            lower >= upper
-        ) {
+        if (lower >= upper) {
             alert(
                 "最低價格必須小於最高價格"
             );
             return;
         }
         /*
-         * 如果沒有 Current Price
-         *
-         * 使用市場價格
+         * -----------------------------------------------------
+         * Current market price
+         * -----------------------------------------------------
          */
         if (
             !Number.isFinite(current) ||
             current <= 0
         ) {
             current =
-                priceA /
-                priceB;
+                priceA / priceB;
             document.getElementById(
                 "currentPrice"
             ).value =
                 current;
         }
         /*
-         * 市場價格
+         * -----------------------------------------------------
+         * IMPORTANT
+         *
+         * Current price 必須與 token USD price 一致。
+         *
+         * Token B per Token A
+         *
+         * = priceA / priceB
+         * -----------------------------------------------------
          */
         const marketPrice =
-            priceA /
-            priceB;
+            priceA / priceB;
         /*
-         * 目前資產總價值
+         * 不強制覆蓋使用者輸入的 current。
          *
-         * 這就是整個計算的「固定本金」
+         * 因為使用者可能在測試：
+         *
+         * 「如果價格在 X 的時候建池」
+         *
+         * 但是顯示一個提醒。
          */
-        const valueA =
-            amountA *
-            priceA;
-        const valueB =
-            amountB *
-            priceB;
-        const totalValue =
-            valueA +
-            valueB;
-        if (
-            totalValue <= 0
-        ) {
-            alert(
-                "目前資產總價值必須大於 0"
-            );
-            return;
-        }
-        /* =====================================================
-           CURRENT PRICE WARNING
-        ====================================================== */
         const priceDifference =
             Math.abs(
-                current -
-                marketPrice
-            ) /
-            marketPrice;
+                current - marketPrice
+            ) / marketPrice;
         /*
-         * 如果手動輸入的 current
-         * 跟 USD 價格差太多，
-         * 提醒使用者。
+         * -----------------------------------------------------
+         * Total asset value
+         *
+         * THIS NEVER CHANGES.
+         * -----------------------------------------------------
          */
-        let priceWarning = "";
-        if (
-            priceDifference >
-            0.005
-        ) {
-            priceWarning = `
-            <div class="warning">
-                ⚠️
-                你輸入的 Current Price
-                與 Token USD 價格推導出的市場價格
-                有明顯差異。
-                <br><br>
-                USD 推導：
-                <b>
-                    ${formatNumber(
-                marketPrice,
-                12
-            )}
-                </b>
-                <br>
-                Current Price：
-                <b>
-                    ${formatNumber(
-                current,
-                12
-            )}
-                </b>
-                <br><br>
-                建議按
-                「使用目前市場價格」。
-            </div>
-        `;
-        }
-        /* =====================================================
-           V3 TARGET
-        ====================================================== */
+        const valueA =
+            amountA * priceA;
+        const valueB =
+            amountB * priceB;
+        const total =
+            valueA + valueB;
+        /*
+         * -----------------------------------------------------
+         * PancakeSwap V3 LP target composition
+         * -----------------------------------------------------
+         */
         let lp;
         try {
             lp =
-                calculateTargetLP(
-                    totalValue,
-                    priceA,
-                    current,
+                calculateLPComposition(
                     lower,
-                    upper
+                    upper,
+                    current,
+                    total,
+                    priceA,
+                    priceB
                 );
-        }
-        catch (error) {
-            result.innerHTML = `
-            <div class="danger">
-                ${escapeHtml(
-                error.message
-            )}
-            </div>
-        `;
+        } catch (e) {
+            document.getElementById(
+                "result"
+            ).innerHTML =
+                `<div class="error">
+                ${e.message}
+            </div>`;
             return;
         }
-        /* =====================================================
-           SWAP
-        ====================================================== */
         /*
-         * 注意：
-         *
-         * target LP 使用 current price
-         *
-         * Swap 則使用 priceA / priceB
-         *
-         * 最理想情況：
-         *
-         * current == marketPrice
-         *
-         * 這樣才是同一個市場狀態。
+         * -----------------------------------------------------
+         * Determine which token should be sold
+         * -----------------------------------------------------
          */
         const swap =
-            calculateSwap(
+            calculateRequiredSwap(
                 amountA,
                 amountB,
                 lp.amountA,
                 lp.amountB,
                 priceA,
-                priceB,
-                feePercent,
-                slippagePercent
+                priceB
             );
-        /* =====================================================
-           HTML
-        ====================================================== */
+        /*
+         * -----------------------------------------------------
+         * Final assets
+         *
+         * These are NOT a new total.
+         *
+         * They are simply:
+         *
+         * existing assets
+         * +/- swap
+         * -----------------------------------------------------
+         */
+        const finalA =
+            swap.finalA;
+        const finalB =
+            swap.finalB;
+        /*
+         * -----------------------------------------------------
+         * Value check
+         * -----------------------------------------------------
+         */
+        const finalValue =
+            finalA * priceA +
+            finalB * priceB;
+        const valueError =
+            finalValue - total;
+        /*
+         * -----------------------------------------------------
+         * Token symbols
+         * -----------------------------------------------------
+         */
+        const symbolA =
+            getSymbol("A");
+        const symbolB =
+            getSymbol("B");
         let html = "";
         /* =====================================================
-           1. TOTAL
-        ====================================================== */
+           ASSET SUMMARY
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                💰 目前資產
-            </span>
-            <hr>
-            ${symbolA}：
-            <b>
-                ${formatNumber(
+    <div class="result-box">
+        <span class="badge">
+            資產總覽
+        </span>
+        <hr>
+        ${symbolA}
+        <b>
+            ${formatNumber(
             amountA,
             12
         )}
-            </b>
-            <br>
-            ${symbolA} 價值：
-            <b>
-                ${formatNumber(
+        </b>
+        <br>
+        價值：
+        ${formatNumber(
             valueA,
             2
         )}
-            </b>
-            USD
-            <hr>
-            ${symbolB}：
-            <b>
-                ${formatNumber(
+        USDT
+        <hr>
+        ${symbolB}
+        <b>
+            ${formatNumber(
             amountB,
             12
         )}
-            </b>
-            <br>
-            ${symbolB} 價值：
-            <b>
-                ${formatNumber(
+        </b>
+        <br>
+        價值：
+        ${formatNumber(
             valueB,
             2
         )}
-            </b>
-            USD
-            <hr>
-            <span class="big">
-                總資產：
-                ${formatNumber(
-            totalValue,
+        USDT
+        <hr>
+        <span class="big">
+            總資產：
+            ${formatNumber(
+            total,
             2
         )}
-                USD
-            </span>
-            <br>
-            <span class="small">
-                ⚠️ 這個總資產是本次計算的固定本金。
-                Swap 只改變 A/B 組成，不會憑空增加資產。
-            </span>
-        </div>
+            USDT
+        </span>
+    </div>
     `;
         /* =====================================================
-           2. MARKET
-        ====================================================== */
+           CURRENT STATUS
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                📈 市場 / LP 價格
-            </span>
-            <hr>
-            市場價格：
-            <b>
-                ${formatNumber(
-            marketPrice,
-            12
-        )}
-            </b>
-            ${symbolB}/${symbolA}
-            <br>
-            LP Current Price：
-            <b>
-                ${formatNumber(
+    <div class="result-box">
+        <span class="badge">
+            LP 狀態
+        </span>
+        <hr>
+        目前價格：
+        <b>
+            ${formatNumber(
             current,
             12
         )}
-            </b>
-            ${symbolB}/${symbolA}
-            <br><br>
-            LP Range：
-            <b>
-                ${formatNumber(
+        </b>
+        ${symbolB} / ${symbolA}
+        <br>
+        LP Range：
+        <b>
+            ${formatNumber(
             lower,
             12
         )}
-            </b>
-            ~
-            <b>
-                ${formatNumber(
+        </b>
+        ~
+        <b>
+            ${formatNumber(
             upper,
             12
         )}
-            </b>
-            ${symbolB}/${symbolA}
-            ${priceWarning}
-        </div>
+        </b>
     `;
-        /* =====================================================
-           3. LP STATUS
-        ====================================================== */
-        html += `
-        <div class="result-box">
-            <span class="badge">
-                🥞 PancakeSwap V3 狀態
-            </span>
-            <hr>
-    `;
+        if (current < lower) {
+            html += `
+        <hr>
+        <span class="yellow">
+            📉 目前價格低於 LP 區間
+        </span>
+        <br>
+        V3 LP 將為：
+        <b>
+            100% ${symbolA}
+        </b>
+        `;
+        } else if (current > upper) {
+            html += `
+        <hr>
+        <span class="yellow">
+            📈 目前價格高於 LP 區間
+        </span>
+        <br>
+        V3 LP 將為：
+        <b>
+            100% ${symbolB}
+        </b>
+        `;
+        } else {
+            html += `
+        <hr>
+        <span class="green">
+            🟢 目前價格在 LP 區間內
+        </span>
+        `;
+        }
+        /*
+         * current price vs market price
+         */
         if (
-            current <= lower
+            priceDifference > 0.001
         ) {
             html += `
-            <div class="warning">
-                📉
-                Current Price
-                低於 Range
-                <br><br>
-                V3 Position
-                理論上為：
-                <br>
-                <span class="huge">
-                    100% ${symbolA}
-                </span>
-                <br><br>
-                因此建立這個 LP
-                前需要以
-                <b>${symbolA}</b>
-                為主。
-            </div>
-        `;
-        }
-        else if (
-            current >= upper
-        ) {
-            html += `
-            <div class="warning">
-                📈
-                Current Price
-                高於 Range
-                <br><br>
-                V3 Position
-                理論上為：
-                <br>
-                <span class="huge">
-                    100% ${symbolB}
-                </span>
-                <br><br>
-                因此建立這個 LP
-                前需要以
-                <b>${symbolB}</b>
-                為主。
-            </div>
-        `;
-        }
-        else {
-            html += `
-            <div class="success">
-                🟢 Current Price
-                位於 LP Range 內。
-                <br><br>
-                LP 同時需要：
-                <b>
-                    ${symbolA}
-                </b>
-                +
-                <b>
-                    ${symbolB}
-                </b>
-            </div>
+        <hr>
+        <span class="yellow">
+            ⚠️ 目前價格與 Token USD
+            推算價格不同
+        </span>
+        <br>
+        Token USD 推算：
+        <b>
+            ${formatNumber(
+                marketPrice,
+                12
+            )}
+        </b>
+        ${symbolB} / ${symbolA}
         `;
         }
         html += `</div>`;
         /* =====================================================
-           4. TARGET LP
-        ====================================================== */
+           TARGET LP COMPOSITION
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                🎯 這筆總資產建立 LP 所需要的數量
-            </span>
-            <hr>
-            ${symbolA}：
-            <b class="blue">
-                ${formatNumber(
+    <div class="result-box">
+        <span class="badge">
+            PancakeSwap V3 建池所需比例
+        </span>
+        <hr>
+        ${symbolA}：
+        <b class="blue">
+            ${formatNumber(
             lp.amountA,
             12
         )}
-            </b>
-            <br>
-            ${symbolB}：
-            <b class="blue">
-                ${formatNumber(
+        </b>
+        <br>
+        ${symbolB}：
+        <b class="blue">
+            ${formatNumber(
             lp.amountB,
             12
         )}
-            </b>
-            <hr>
-            ${symbolA}
-            價值比例：
-            <b>
-                ${(lp.ratioA * 100).toFixed(4)}%
-            </b>
-            <br>
-            ${symbolB}
-            價值比例：
-            <b>
-                ${(lp.ratioB * 100).toFixed(4)}%
-            </b>
-        </div>
+        </b>
+        <hr>
+        ${symbolA} 價值比例：
+        <b>
+            ${(lp.ratioA * 100).toFixed(4)}%
+        </b>
+        <br>
+        ${symbolB} 價值比例：
+        <b>
+            ${(lp.ratioB * 100).toFixed(4)}%
+        </b>
+    </div>
     `;
         /* =====================================================
-           5. THE MOST IMPORTANT
-        ====================================================== */
+           SELL JUDGMENT
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                ⭐ 最重要：你到底要賣哪個幣？
-            </span>
-            <hr>
+    <div class="result-box">
+        <span class="badge">
+            🔄 建池前需要賣哪個幣？
+        </span>
+        <hr>
     `;
         if (
-            swap.direction ===
-            "SELL_A"
+            swap.action === "NONE"
         ) {
             html += `
-            <div class="danger">
-                🔴
-                <span class="huge">
-                    ${symbolA} 過多
-                </span>
-                <br><br>
-                你應該：
-                <br>
-                <span class="big">
-                    賣 ${formatNumber(
+        <span class="green">
+            ✅ 不需要 Swap
+        </span>
+        <br><br>
+        目前資產比例已經足夠接近
+        PancakeSwap V3 建池比例。
+        `;
+        }
+        else if (
+            swap.action === "SELL_A"
+        ) {
+            html += `
+        <span class="yellow">
+            🔄 ${symbolA} 過多
+        </span>
+        <br><br>
+        <span class="red">
+            建議賣出：
+        </span>
+        <br>
+        <b class="red big">
+            ${formatNumber(
                 swap.sellA,
                 12
             )}
-                    ${symbolA}
-                </span>
-                <br>
-                換成
-                <span class="big green">
-                    ${symbolB}
-                </span>
-            </div>
-            <div class="swap-direction">
-                ${symbolA}
-                →
-                ${symbolB}
-            </div>
-            <hr>
-            理論應收到：
-            <b class="green">
-                ${formatNumber(
-                swap.theoreticalB,
-                12
-            )}
-                ${symbolB}
-            </b>
-            <br>
-            按你設定的 Fee / Slippage
-            後預估收到：
-            <b class="green">
-                ${formatNumber(
+            ${symbolA}
+        </b>
+        <br><br>
+        換取約：
+        <br>
+        <b class="green big">
+            ${formatNumber(
                 swap.receiveB,
                 12
             )}
-                ${symbolB}
-            </b>
+            ${symbolB}
+        </b>
+        <hr>
+        賣出後：
+        <br>
+        ${symbolA}：
+        <b>
+            ${formatNumber(
+                finalA,
+                12
+            )}
+        </b>
+        <br>
+        ${symbolB}：
+        <b>
+            ${formatNumber(
+                finalB,
+                12
+            )}
+        </b>
         `;
         }
         else if (
-            swap.direction ===
-            "SELL_B"
+            swap.action === "SELL_B"
         ) {
             html += `
-            <div class="danger">
-                🔴
-                <span class="huge">
-                    ${symbolB} 過多
-                </span>
-                <br><br>
-                你應該：
-                <br>
-                <span class="big">
-                    賣 ${formatNumber(
+        <span class="yellow">
+            🔄 ${symbolB} 過多
+        </span>
+        <br><br>
+        <span class="red">
+            建議賣出：
+        </span>
+        <br>
+        <b class="red big">
+            ${formatNumber(
                 swap.sellB,
                 12
             )}
-                    ${symbolB}
-                </span>
-                <br>
-                換成
-                <span class="big green">
-                    ${symbolA}
-                </span>
-            </div>
-            <div class="swap-direction">
-                ${symbolB}
-                →
-                ${symbolA}
-            </div>
-            <hr>
-            理論應收到：
-            <b class="green">
-                ${formatNumber(
-                swap.theoreticalA,
-                12
-            )}
-                ${symbolA}
-            </b>
-            <br>
-            按你設定的 Fee / Slippage
-            後預估收到：
-            <b class="green">
-                ${formatNumber(
+            ${symbolB}
+        </b>
+        <br><br>
+        換取約：
+        <br>
+        <b class="green big">
+            ${formatNumber(
                 swap.receiveA,
                 12
             )}
-                ${symbolA}
-            </b>
-        `;
-        }
-        else {
-            html += `
-            <div class="success">
-                ✅
-                <span class="big">
-                    目前資產比例已經符合
-                    PancakeSwap V3 Range
-                </span>
-                <br><br>
-                不需要額外 Swap。
-            </div>
+            ${symbolA}
+        </b>
+        <hr>
+        賣出後：
+        <br>
+        ${symbolA}：
+        <b>
+            ${formatNumber(
+                finalA,
+                12
+            )}
+        </b>
+        <br>
+        ${symbolB}：
+        <b>
+            ${formatNumber(
+                finalB,
+                12
+            )}
+        </b>
         `;
         }
         html += `</div>`;
         /* =====================================================
-           6. AFTER SWAP
-        ====================================================== */
-        let finalA;
-        let finalB;
-        if (
-            swap.direction ===
-            "SELL_A"
-        ) {
-            /*
-             * 實際有 Fee / Slippage 時，
-             * 收到 B 會少一點。
-             *
-             * 因此這裡顯示實際 Swap 後
-             * 的理論資產。
-             */
-            finalA =
-                amountA -
-                swap.sellA;
-            finalB =
-                amountB +
-                swap.receiveB;
-        }
-        else if (
-            swap.direction ===
-            "SELL_B"
-        ) {
-            finalA =
-                amountA +
-                swap.receiveA;
-            finalB =
-                amountB -
-                swap.sellB;
-        }
-        else {
-            finalA =
-                amountA;
-            finalB =
-                amountB;
-        }
-        /* =====================================================
-           7. IDEAL AFTER SWAP
-        ====================================================== */
+           FINAL LP DEPOSIT
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                💱 理想交易後資產
-            </span>
-            <hr>
-            ${symbolA}：
-            <b class="big">
-                ${formatNumber(
-            finalA,
-            12
-        )}
-            </b>
-            <br>
-            ${symbolB}：
-            <b class="big">
-                ${formatNumber(
-            finalB,
-            12
-        )}
-            </b>
-            <hr>
-            <span class="small">
-                這裡會受到你設定的
-                Swap Fee / Slippage
-                影響。
-            </span>
-        </div>
-    `;
-        /* =====================================================
-           8. IDEAL NO-FEE RESULT
-        ====================================================== */
-        let idealFinalA =
-            amountA;
-        let idealFinalB =
-            amountB;
-        if (
-            swap.direction ===
-            "SELL_A"
-        ) {
-            idealFinalA =
-                amountA -
-                swap.sellA;
-            idealFinalB =
-                amountB +
-                swap.theoreticalB;
-        }
-        else if (
-            swap.direction ===
-            "SELL_B"
-        ) {
-            idealFinalA =
-                amountA +
-                swap.theoreticalA;
-            idealFinalB =
-                amountB -
-                swap.sellB;
-        }
-        html += `
-        <div class="result-box">
-            <span class="badge">
-                🥞 理論上可直接建 LP
-            </span>
-            <hr>
-            ${symbolA}：
-            <b class="blue">
-                ${formatNumber(
-            idealFinalA,
-            12
-        )}
-            </b>
-            <br>
-            ${symbolB}：
-            <b class="blue">
-                ${formatNumber(
-            idealFinalB,
-            12
-        )}
-            </b>
-            <hr>
-            目標：
-            <br>
-            ${symbolA}：
+    <div class="result-box">
+        <span class="badge">
+            💧 最終建議投入 LP
+        </span>
+        <hr>
+        ${symbolA}：
+        <b class="big">
             ${formatNumber(
             lp.amountA,
             12
         )}
-            <br>
-            ${symbolB}：
+        </b>
+        <br>
+        ${symbolB}：
+        <b class="big">
             ${formatNumber(
             lp.amountB,
             12
         )}
-        </div>
+        </b>
+        <hr>
+        <span class="info">
+        建池總價值：
+        <b>
+            ${formatNumber(
+            total,
+            2
+        )}
+            USDT
+        </b>
+        <br>
+        交易前總價值：
+        ${formatNumber(
+            total,
+            2
+        )}
+        USDT
+        <br>
+        交易後理論總價值：
+        ${formatNumber(
+            finalValue,
+            2
+        )}
+        USDT
+        </span>
+    </div>
     `;
         /* =====================================================
-           9. EXPLANATION
-        ====================================================== */
+           VALUE CHECK
+        ===================================================== */
         html += `
-        <div class="result-box">
-            <span class="badge">
-                🧠 計算邏輯
-            </span>
-            <hr>
-            <div class="formula">
-                目前總資產
-                =
-                A 數量 × A USD
-                +
-                B 數量 × B USD
-                <br><br>
-                LP 使用：
-                sqrt(P)
-                <br>
-                amountA
-                =
-                L ×
-                (sqrtUpper - sqrtCurrent)
-                /
-                (sqrtCurrent × sqrtUpper)
-                <br><br>
-                amountB
-                =
-                L ×
-                (sqrtCurrent - sqrtLower)
-            </div>
-            <br>
-            這個計算器的核心不是
-            「把錢一半一半分」。
-            <br><br>
-            而是：
-            <br>
-            <b>
-                你的總資產固定
-            </b>
-            ↓
-            <br>
-            算出這個 PancakeSwap V3
-            Range 在目前價格需要的
-            A / B 組成
-            ↓
-            <br>
-            比較你目前持有量
-            ↓
-            <br>
-            判斷：
-            <br>
-            <b class="red">
-                A 過多 → 賣 A
-            </b>
-            <br>
-            或
-            <br>
-            <b class="red">
-                B 過多 → 賣 B
-            </b>
-            ↓
-            <br>
-            得到可以建立 LP 的 A / B。
-        </div>
+    <div class="result-box">
+        <span class="badge">
+            計算檢查
+        </span>
+        <hr>
+        總資產價值誤差：
+        <b class="${
+            Math.abs(valueError) < 0.01
+                ? "green"
+                : "red"
+        }">
+            ${formatNumber(
+            Math.abs(valueError),
+            8
+        )}
+            USDT
+        </b>
+        <br><br>
+        <span class="info">
+        ⚠️ 此計算為理論值。
+        <br>
+        實際 PancakeSwap Swap
+        仍會受到：
+        <br>
+        • Swap Fee
+        <br>
+        • Price Impact
+        <br>
+        • Slippage
+        <br>
+        • Tick Rounding
+        <br>
+        • Token Decimal
+        <br>
+        • Pool Liquidity
+        <br>
+        • MEV
+        <br><br>
+        影響。
+        </span>
+    </div>
     `;
-        /* =====================================================
-           10. IMPORTANT
-        ====================================================== */
-        html += `
-        <div class="result-box">
-            <span class="badge">
-                ⚠️ 實際 PancakeSwap 交易注意事項
-            </span>
-            <hr>
-            本計算器是「建池前資產平衡計算」。
-            <br><br>
-            實際執行 Swap 時還會受到：
-            <br>
-            • Swap Fee
-            <br>
-            • Price Impact
-            <br>
-            • Slippage
-            <br>
-            • MEV
-            <br>
-            • Token Decimal
-            <br>
-            • PancakeSwap V3 Tick
-            <br>
-            • Tick Spacing
-            <br>
-            • Pool Fee Tier
-            <br>
-            等因素影響。
-            <br><br>
-            所以實際操作時，
-            建議不要把最後一個最小單位
-            全部拿去建池。
-        </div>
-    `;
-        result.innerHTML =
-            html;
+        document.getElementById(
+            "result"
+        ).innerHTML = html;
     }
     /* =========================================================
        ESCAPE HTML
