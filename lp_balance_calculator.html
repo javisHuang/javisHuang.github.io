@@ -1,99 +1,2244 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<title>LP 平衡計算器（剩餘數量版）</title>
-<style>
-body { font-family: Arial; padding:20px; max-width:600px; margin:auto;}
-input { width:100%; padding:8px; margin:5px 0;}
-button { padding:10px; width:100%;}
-.result { margin-top:20px; background:#f3f3f3; padding:15px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PancakeSwap V3 LP 平衡計算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family:
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Arial,
+                    sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            font-size: 26px;
+            margin: 0 0 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        h3 {
+            margin-top: 0;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #1f2937;
+            font-size: 15px;
+        }
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #5c8cff;
+        }
+        button {
+            margin-top: 15px;
+            cursor: pointer;
+            background: #356dff;
+            border: none;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #2858d8;
+        }
+        button.secondary {
+            background: #252f45;
+        }
+        button.green-btn {
+            background: #168a57;
+        }
+        button.green-btn:hover {
+            background: #116c44;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .token-row {
+            display: grid;
+            grid-template-columns: 1fr 150px;
+            gap: 10px;
+            align-items: end;
+        }
+        .price-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+        .price {
+            font-size: 19px;
+            font-weight: bold;
+        }
+        .small {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .info {
+            color: #8d99ae;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .result {
+            line-height: 1.7;
+        }
+        .result-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 10px;
+        }
+        .green {
+            color: #35d07f;
+        }
+        .red {
+            color: #ff6874;
+        }
+        .yellow {
+            color: #ffc857;
+        }
+        .blue {
+            color: #67a1ff;
+        }
+        .big {
+            font-size: 21px;
+            font-weight: bold;
+        }
+        .huge {
+            font-size: 26px;
+            font-weight: bold;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 15px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 12px;
+        }
+        .loading {
+            color: #ffc857;
+        }
+        .error {
+            color: #ff6874;
+        }
+        .warning {
+            background: rgba(255, 200, 87, 0.08);
+            border: 1px solid rgba(255, 200, 87, 0.25);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ffc857;
+            margin-top: 10px;
+        }
+        .success {
+            background: rgba(53, 208, 127, 0.08);
+            border: 1px solid rgba(53, 208, 127, 0.25);
+            border-radius: 8px;
+            padding: 12px;
+            color: #35d07f;
+            margin-top: 10px;
+        }
+        .danger {
+            background: rgba(255, 104, 116, 0.08);
+            border: 1px solid rgba(255, 104, 116, 0.25);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ff6874;
+            margin-top: 10px;
+        }
+        .swap-direction {
+            text-align: center;
+            font-size: 18px;
+            padding: 10px 0;
+        }
+        .formula {
+            background: #090d15;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #b9c2d0;
+            overflow-x: auto;
+        }
+        @media(max-width:600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .token-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<h2>LP 平衡計算器（剩餘數量版）</h2>
-
-<label>Token A 數量</label>
-<input id="amountA" type="number" step="any">
-
-<label>Token A 價格 (USDT)</label>
-<input id="priceA" type="number" step="any">
-
-<label>Token B 數量</label>
-<input id="amountB" type="number" step="any">
-
-<label>Token B 價格 (USDT)</label>
-<input id="priceB" type="number" step="any">
-
-<label>最低價格 (TokenB per TokenA)</label>
-<input id="minPrice" type="number" step="any">
-
-<label>最高價格 (TokenB per TokenA)</label>
-<input id="maxPrice" type="number" step="any">
-
-<label>當前價格 (TokenB per TokenA)</label>
-<input id="currentPrice" type="number" step="any">
-
-<button onclick="calculate()">計算平衡</button>
-
-<div class="result" id="result"></div>
-
+<div class="container">
+    <h1>🥞 PancakeSwap V3 LP 平衡計算器</h1>
+    <div class="subtitle">
+        Concentrated Liquidity / V3 精確配比
+    </div>
+    <!-- =====================================================
+         NETWORK
+    ====================================================== -->
+    <div class="card">
+        <h3>① Blockchain</h3>
+        <select id="network">
+            <option value="monad">
+                Monad
+            </option>
+            <option value="ethereum">
+                Ethereum
+            </option>
+            <option value="base">
+                Base
+            </option>
+            <option value="arbitrum">
+                Arbitrum
+            </option>
+            <option value="bsc">
+                BNB Chain
+            </option>
+            <option value="optimism">
+                Optimism
+            </option>
+            <option value="polygon">
+                Polygon
+            </option>
+        </select>
+    </div>
+    <!-- =====================================================
+         TOKEN
+    ====================================================== -->
+    <div class="card">
+        <h3>② Token</h3>
+        <div class="token-row">
+            <div>
+                <label>
+                    Token A
+                </label>
+                <input
+                        id="tokenASearch"
+                        value="WMON"
+                        placeholder="例如 WMON"
+                >
+                <select id="tokenA"></select>
+            </div>
+            <div>
+                <label>
+                    Token A USD 價格
+                </label>
+                <input
+                        id="priceA"
+                        type="number"
+                        step="any"
+                        placeholder="例如 1"
+                >
+            </div>
+        </div>
+        <div class="token-row">
+            <div>
+                <label>
+                    Token B
+                </label>
+                <input
+                        id="tokenBSearch"
+                        value="USDC"
+                        placeholder="例如 USDC"
+                >
+                <select id="tokenB"></select>
+            </div>
+            <div>
+                <label>
+                    Token B USD 價格
+                </label>
+                <input
+                        id="priceB"
+                        type="number"
+                        step="any"
+                        placeholder="例如 1"
+                >
+            </div>
+        </div>
+        <button
+                class="secondary"
+                onclick="loadPrices()"
+        >
+            🔄 取得市場價格
+        </button>
+        <div class="price-box">
+            <div class="small">
+                PancakeSwap V3 計算價格
+            </div>
+            <div
+                    class="price"
+                    id="pairPrice"
+            >
+                -
+            </div>
+            <div class="small">
+                Token B / Token A
+            </div>
+        </div>
+    </div>
+    <!-- =====================================================
+         CURRENT ASSETS
+    ====================================================== -->
+    <div class="card">
+        <h3>③ 目前手上的資產</h3>
+        <div class="grid">
+            <div>
+                <label>
+                    Token A 數量
+                </label>
+                <input
+                        id="amountA"
+                        type="number"
+                        step="any"
+                        placeholder="例如 16896.1"
+                >
+            </div>
+            <div>
+                <label>
+                    Token B 數量
+                </label>
+                <input
+                        id="amountB"
+                        type="number"
+                        step="any"
+                        placeholder="例如 585.63061549"
+                >
+            </div>
+        </div>
+    </div>
+    <!-- =====================================================
+         RANGE
+    ====================================================== -->
+    <div class="card">
+        <h3>④ PancakeSwap V3 LP Range</h3>
+        <label>
+            最低價格
+            <br>
+            <span class="small">
+                Token B per Token A
+            </span>
+        </label>
+        <input
+                id="minPrice"
+                type="number"
+                step="any"
+                placeholder="例如 0.025"
+        >
+        <label>
+            最高價格
+            <br>
+            <span class="small">
+                Token B per Token A
+            </span>
+        </label>
+        <input
+                id="maxPrice"
+                type="number"
+                step="any"
+                placeholder="例如 0.05"
+        >
+        <label>
+            目前價格
+            <br>
+            <span class="small">
+                Token B per Token A
+            </span>
+        </label>
+        <input
+                id="currentPrice"
+                type="number"
+                step="any"
+                placeholder="自動使用市場價格"
+        >
+        <button
+                class="secondary"
+                onclick="useMarketPrice()"
+        >
+            📈 使用目前市場價格
+        </button>
+    </div>
+    <!-- =====================================================
+         SWAP SETTINGS
+    ====================================================== -->
+    <div class="card">
+        <h3>⑤ Swap 設定</h3>
+        <div class="grid">
+            <div>
+                <label>
+                    Swap Fee %
+                </label>
+                <input
+                        id="swapFee"
+                        type="number"
+                        step="any"
+                        value="0"
+                        placeholder="例如 0.25"
+                >
+            </div>
+            <div>
+                <label>
+                    預估滑點 %
+                </label>
+                <input
+                        id="slippage"
+                        type="number"
+                        step="any"
+                        value="0"
+                        placeholder="例如 0.5"
+                >
+            </div>
+        </div>
+        <div class="info">
+            計算器預設使用「無 Fee、無滑點」的理論結果。
+            <br>
+            如果你要實際 Swap，可以輸入預估 Fee / Slippage，
+            讓建議賣出量更保守。
+        </div>
+    </div>
+    <!-- =====================================================
+         CALCULATE
+    ====================================================== -->
+    <div class="card">
+        <button
+                class="green-btn"
+                onclick="calculate()"
+        >
+            🧮 計算「到底要賣哪個幣」
+        </button>
+        <div
+                id="result"
+                class="result"
+        ></div>
+    </div>
+</div>
 <script>
-function calculate() {
-    let amountA = parseFloat(document.getElementById("amountA").value);
-    let priceA = parseFloat(document.getElementById("priceA").value);
-    let amountB = parseFloat(document.getElementById("amountB").value);
-    let priceB = parseFloat(document.getElementById("priceB").value);
-    let minPrice = parseFloat(document.getElementById("minPrice").value);
-    let maxPrice = parseFloat(document.getElementById("maxPrice").value);
-    let currentPrice = parseFloat(document.getElementById("currentPrice").value);
-
-    if (!amountA || !priceA || !amountB || !priceB || !minPrice || !maxPrice || !currentPrice) {
-        alert("請填寫完整");
-        return;
+    /* =========================================================
+       CONFIG
+    ========================================================= */
+    const API_BASE =
+        "https://api.dexscreener.com/latest/dex";
+    const NETWORKS = {
+        monad: {
+            name: "Monad",
+            dexChain: "monad"
+        },
+        ethereum: {
+            name: "Ethereum",
+            dexChain: "ethereum"
+        },
+        base: {
+            name: "Base",
+            dexChain: "base"
+        },
+        arbitrum: {
+            name: "Arbitrum",
+            dexChain: "arbitrum"
+        },
+        bsc: {
+            name: "BNB Chain",
+            dexChain: "bsc"
+        },
+        optimism: {
+            name: "Optimism",
+            dexChain: "optimism"
+        },
+        polygon: {
+            name: "Polygon",
+            dexChain: "polygon"
+        }
+    };
+    /* =========================================================
+       TOKEN SEARCH
+    ========================================================= */
+    let searchTimers = {
+        A: null,
+        B: null
+    };
+    function setupSearch(side) {
+        const input =
+            document.getElementById(
+                side === "A"
+                    ? "tokenASearch"
+                    : "tokenBSearch"
+            );
+        input.addEventListener(
+            "input",
+            () => {
+                clearTimeout(
+                    searchTimers[side]
+                );
+                searchTimers[side] =
+                    setTimeout(
+                        () => searchToken(side),
+                        500
+                    );
+            }
+        );
     }
-
-    let valueA = amountA * priceA;
-    let valueB = amountB * priceB;
-    let total = valueA + valueB;
-
-    let result = `A 價值: ${valueA.toFixed(2)} USDT<br>B 價值: ${valueB.toFixed(2)} USDT<br>總資產: ${total.toFixed(2)} USDT<hr>`;
-
-    let remainingA = amountA;
-    let remainingB = amountB;
-
-    if(currentPrice < minPrice){
-        result += `📉 當前價格低於區間最低價<br>✅ 建議只提供 Token A`;
-    } else if(currentPrice > maxPrice){
-        result += `📈 當前價格高於區間最高價<br>✅ 建議只提供 Token B`;
-    } else {
-        let target = total / 2;
-        let diff = valueA - target;
-        if (Math.abs(diff) < 0.01) {
-            result += "✅ 已經平衡，可以直接提供 LP";
-        } else if (diff > 0) {
-            // A 過多 → 賣出 A 換 B
-            let sellA = diff / priceA;
-            remainingA = amountA - sellA;
-            let addB = diff / priceB;
-            remainingB = amountB + addB;
-            result += `A 過多<br>👉 建議賣出 A: <b>${sellA.toFixed(6)}</b><br>換成 B 價值: ${diff.toFixed(2)} USDT<br>`;
-            result += `💰 賣出後剩餘 A: ${remainingA.toFixed(6)}，B: ${remainingB.toFixed(6)}`;
-        } else {
-            // B 過多 → 賣出 B 換 A
-            let sellB = (-diff) / priceB;
-            remainingB = amountB - sellB;
-            let addA = (-diff) / priceA;
-            remainingA = amountA + addA;
-            result += `B 過多<br>👉 建議賣出 B: <b>${sellB.toFixed(6)}</b><br>換成 A 價值: ${(-diff).toFixed(2)} USDT<br>`;
-            result += `💰 賣出後剩餘 A: ${remainingA.toFixed(6)}，B: ${remainingB.toFixed(6)}`;
+    async function searchToken(side) {
+        const input =
+            document.getElementById(
+                side === "A"
+                    ? "tokenASearch"
+                    : "tokenBSearch"
+            );
+        const query =
+            input.value.trim();
+        if (!query)
+            return;
+        try {
+            const response =
+                await fetch(
+                    `${API_BASE}/search/?q=${encodeURIComponent(query)}`
+                );
+            const data =
+                await response.json();
+            let pairs =
+                data.pairs || [];
+            const network =
+                document.getElementById(
+                    "network"
+                ).value;
+            const chain =
+                NETWORKS[
+                    network
+                    ].dexChain;
+            const chainPairs =
+                pairs.filter(
+                    p =>
+                        p.chainId === chain
+                );
+            if (chainPairs.length) {
+                pairs =
+                    chainPairs;
+            }
+            const map =
+                new Map();
+            pairs.forEach(
+                p => {
+                    if (!p.baseToken)
+                        return;
+                    const address =
+                        p.baseToken.address;
+                    if (!map.has(address)) {
+                        map.set(
+                            address,
+                            {
+                                address,
+                                symbol:
+                                p.baseToken.symbol,
+                                name:
+                                p.baseToken.name,
+                                priceUsd:
+                                p.priceUsd,
+                                pair:
+                                p.pairAddress
+                            }
+                        );
+                    }
+                }
+            );
+            const tokens =
+                [...map.values()];
+            const select =
+                document.getElementById(
+                    side === "A"
+                        ? "tokenA"
+                        : "tokenB"
+                );
+            select.innerHTML =
+                "";
+            tokens
+                .slice(0, 30)
+                .forEach(
+                    token => {
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+                        option.value =
+                            JSON.stringify(
+                                token
+                            );
+                        option.textContent =
+                            `${token.symbol} — ${token.name || ""}`;
+                        select.appendChild(
+                            option
+                        );
+                    }
+                );
+            if (tokens.length) {
+                select.selectedIndex = 0;
+                updateTokenPrice(side);
+            }
+        }
+        catch (error) {
+            console.error(
+                error
+            );
         }
     }
-
-    document.getElementById("result").innerHTML = result;
-}
+    /* =========================================================
+       IMMEDIATE TOKEN SEARCH
+    ========================================================= */
+    async function searchTokenImmediate(
+        side,
+        query
+    ) {
+        try {
+            const response =
+                await fetch(
+                    `${API_BASE}/search/?q=${encodeURIComponent(query)}`
+                );
+            const data =
+                await response.json();
+            let pairs =
+                data.pairs || [];
+            const network =
+                document.getElementById(
+                    "network"
+                ).value;
+            const chain =
+                NETWORKS[
+                    network
+                    ].dexChain;
+            const chainPairs =
+                pairs.filter(
+                    p =>
+                        p.chainId === chain
+                );
+            if (chainPairs.length) {
+                pairs =
+                    chainPairs;
+            }
+            if (!pairs.length)
+                return;
+            const p =
+                pairs[0];
+            if (!p.baseToken)
+                return;
+            const token = {
+                address:
+                p.baseToken.address,
+                symbol:
+                p.baseToken.symbol,
+                name:
+                p.baseToken.name,
+                priceUsd:
+                p.priceUsd,
+                pair:
+                p.pairAddress
+            };
+            const select =
+                document.getElementById(
+                    side === "A"
+                        ? "tokenA"
+                        : "tokenB"
+                );
+            select.innerHTML =
+                "";
+            const option =
+                document.createElement(
+                    "option"
+                );
+            option.value =
+                JSON.stringify(
+                    token
+                );
+            option.textContent =
+                `${token.symbol} — ${token.name || ""}`;
+            select.appendChild(
+                option
+            );
+            select.value =
+                option.value;
+            if (token.priceUsd) {
+                document.getElementById(
+                    side === "A"
+                        ? "priceA"
+                        : "priceB"
+                ).value =
+                    token.priceUsd;
+            }
+        }
+        catch (error) {
+            console.error(
+                error
+            );
+        }
+    }
+    /* =========================================================
+       TOKEN SELECT
+    ========================================================= */
+    document
+        .getElementById("tokenA")
+        .addEventListener(
+            "change",
+            () => updateTokenPrice("A")
+        );
+    document
+        .getElementById("tokenB")
+        .addEventListener(
+            "change",
+            () => updateTokenPrice("B")
+        );
+    function updateTokenPrice(side) {
+        const select =
+            document.getElementById(
+                side === "A"
+                    ? "tokenA"
+                    : "tokenB"
+            );
+        if (!select.value)
+            return;
+        try {
+            const token =
+                JSON.parse(
+                    select.value
+                );
+            if (token.priceUsd) {
+                document.getElementById(
+                    side === "A"
+                        ? "priceA"
+                        : "priceB"
+                ).value =
+                    token.priceUsd;
+            }
+        }
+        catch (error) {}
+        updatePairPrice();
+    }
+    /* =========================================================
+       PRICE
+    ========================================================= */
+    function getMarketPrice() {
+        const priceA =
+            parseFloat(
+                document.getElementById(
+                    "priceA"
+                ).value
+            );
+        const priceB =
+            parseFloat(
+                document.getElementById(
+                    "priceB"
+                ).value
+            );
+        if (
+            !Number.isFinite(priceA) ||
+            !Number.isFinite(priceB) ||
+            priceA <= 0 ||
+            priceB <= 0
+        ) {
+            return null;
+        }
+        return priceA / priceB;
+    }
+    function updatePairPrice() {
+        const price =
+            getMarketPrice();
+        if (
+            !Number.isFinite(price)
+        ) {
+            document.getElementById(
+                "pairPrice"
+            ).textContent =
+                "-";
+            return;
+        }
+        document.getElementById(
+            "pairPrice"
+        ).textContent =
+            formatNumber(
+                price,
+                12
+            );
+    }
+    function useMarketPrice() {
+        const price =
+            getMarketPrice();
+        if (!price) {
+            alert(
+                "請先取得 Token A / Token B 價格"
+            );
+            return;
+        }
+        document.getElementById(
+            "currentPrice"
+        ).value =
+            price;
+        updatePairPrice();
+    }
+    /* =========================================================
+       LOAD PRICES
+    ========================================================= */
+    async function loadPrices() {
+        const tokenA =
+            document.getElementById(
+                "tokenASearch"
+            ).value.trim();
+        const tokenB =
+            document.getElementById(
+                "tokenBSearch"
+            ).value.trim();
+        if (
+            !tokenA ||
+            !tokenB
+        ) {
+            alert(
+                "請輸入 Token"
+            );
+            return;
+        }
+        document.getElementById(
+            "result"
+        ).innerHTML = `
+        <div class="loading">
+            ⏳ 正在取得市場價格...
+        </div>
+    `;
+        await Promise.all([
+            searchTokenImmediate(
+                "A",
+                tokenA
+            ),
+            searchTokenImmediate(
+                "B",
+                tokenB
+            )
+        ]);
+        updatePairPrice();
+        const marketPrice =
+            getMarketPrice();
+        if (marketPrice) {
+            document.getElementById(
+                "currentPrice"
+            ).value =
+                marketPrice;
+        }
+        document.getElementById(
+            "result"
+        ).innerHTML =
+            "";
+    }
+    /* =========================================================
+       FORMAT
+    ========================================================= */
+    function formatNumber(
+        value,
+        decimals = 12
+    ) {
+        if (
+            !Number.isFinite(value)
+        )
+            return "0";
+        return value.toLocaleString(
+            "en-US",
+            {
+                minimumFractionDigits: 0,
+                maximumFractionDigits:
+                decimals
+            }
+        );
+    }
+    /* =========================================================
+       SYMBOL
+    ========================================================= */
+    function getSymbol(side) {
+        try {
+            const select =
+                document.getElementById(
+                    side === "A"
+                        ? "tokenA"
+                        : "tokenB"
+                );
+            if (select.value) {
+                const token =
+                    JSON.parse(
+                        select.value
+                    );
+                return token.symbol;
+            }
+        }
+        catch (error) {}
+        return side === "A"
+            ? "Token A"
+            : "Token B";
+    }
+    /* =========================================================
+       V3 MATH
+    =========================================================
+    PancakeSwap V3 / Uniswap V3-style concentrated liquidity:
+    amount0 =
+    L * (sqrtUpper - sqrtCurrent)
+        /
+        (sqrtCurrent * sqrtUpper)
+    amount1 =
+    L * (sqrtCurrent - sqrtLower)
+    價格：
+    P = Token1 / Token0
+    因此：
+    sqrtP = sqrt(P)
+    ========================================================= */
+    function sqrtPrice(
+        price
+    ) {
+        return Math.sqrt(
+            price
+        );
+    }
+    /* =========================================================
+       CALCULATE V3 UNIT AMOUNTS
+    ========================================================= */
+    function calculateUnitAmounts(
+        lower,
+        upper,
+        current
+    ) {
+        /*
+         * current <= lower
+         *
+         * Position 100% Token A
+         */
+        if (
+            current <= lower
+        ) {
+            return {
+                mode: "A",
+                unitA: 1,
+                unitB: 0
+            };
+        }
+        /*
+         * current >= upper
+         *
+         * Position 100% Token B
+         */
+        if (
+            current >= upper
+        ) {
+            return {
+                mode: "B",
+                unitA: 0,
+                unitB: 1
+            };
+        }
+        const sqrtL =
+            sqrtPrice(
+                lower
+            );
+        const sqrtU =
+            sqrtPrice(
+                upper
+            );
+        const sqrtP =
+            sqrtPrice(
+                current
+            );
+        const unitA =
+            (
+                1 / sqrtP
+                -
+                1 / sqrtU
+            );
+        const unitB =
+            (
+                sqrtP
+                -
+                sqrtL
+            );
+        return {
+            mode: "both",
+            unitA,
+            unitB
+        };
+    }
+    /* =========================================================
+       TARGET LP COMPOSITION
+    =========================================================
+    這裡非常重要：
+    我們不是：
+    total / 2
+    而是：
+    1. 先用 V3 Range + Current Price
+       算出 Token A / B 的比例。
+    2. 再使用「你現在的總資產價值」
+       作為固定資產池。
+    3. 找出這筆固定資產
+       能提供多少 liquidity。
+    4. 得到實際需要的 A / B。
+    ========================================================= */
+    function calculateTargetLP(
+        totalValue,
+        priceA,
+        current,
+        lower,
+        upper
+    ) {
+        const unit =
+            calculateUnitAmounts(
+                lower,
+                upper,
+                current
+            );
+        /*
+         * current <= lower
+         *
+         * 100% A
+         */
+        if (
+            unit.mode === "A"
+        ) {
+            const amountA =
+                totalValue /
+                priceA;
+            return {
+                mode: "A",
+                amountA,
+                amountB: 0,
+                ratioA: 1,
+                ratioB: 0,
+                liquidity: null
+            };
+        }
+        /*
+         * current >= upper
+         *
+         * 100% B
+         *
+         * Token B USD price =
+         * current * priceA
+         */
+        if (
+            unit.mode === "B"
+        ) {
+            const tokenBPrice =
+                current *
+                priceA;
+            const amountB =
+                totalValue /
+                tokenBPrice;
+            return {
+                mode: "B",
+                amountA: 0,
+                amountB,
+                ratioA: 0,
+                ratioB: 1,
+                liquidity: null
+            };
+        }
+        /*
+         * 區間內
+         */
+        const unitA =
+            unit.unitA;
+        const unitB =
+            unit.unitB;
+        /*
+         * Token B 的目前價格
+         *
+         * P = B / A
+         *
+         * 1 B = priceA / P USD
+         */
+        const tokenBPrice =
+            priceA /
+            current;
+        /*
+         * 一個 L 的 USD value
+         */
+        const valuePerL =
+            unitA * priceA
+            +
+            unitB * tokenBPrice;
+        if (
+            valuePerL <= 0 ||
+            !Number.isFinite(
+                valuePerL
+            )
+        ) {
+            throw new Error(
+                "無法計算 V3 Liquidity"
+            );
+        }
+        /*
+         * 固定總資產價值
+         *
+         * totalValue 不變
+         */
+        const liquidity =
+            totalValue /
+            valuePerL;
+        const amountA =
+            unitA *
+            liquidity;
+        const amountB =
+            unitB *
+            liquidity;
+        const valueA =
+            amountA *
+            priceA;
+        const valueB =
+            amountB *
+            tokenBPrice;
+        const actualTotal =
+            valueA +
+            valueB;
+        return {
+            mode: "both",
+            amountA,
+            amountB,
+            ratioA:
+                valueA /
+                actualTotal,
+            ratioB:
+                valueB /
+                actualTotal,
+            liquidity,
+            tokenBPrice
+        };
+    }
+    /* =========================================================
+       SWAP CALCULATION
+    =========================================================
+    這裡才是你真正要的：
+    目前：
+    A_current
+    B_current
+    目標：
+    A_target
+    B_target
+    總價值不變。
+    如果：
+    A_current > A_target
+    => A 太多
+    => 賣 A
+    如果：
+    B_current > B_target
+    => B 太多
+    => 賣 B
+    ========================================================= */
+    function calculateSwap(
+        amountA,
+        amountB,
+        targetA,
+        targetB,
+        priceA,
+        priceB,
+        feePercent,
+        slippagePercent
+    ) {
+        /*
+         * 使用「市場價格」
+         * 做理論交換。
+         */
+        const marketValueA =
+            amountA *
+            priceA;
+        const marketValueB =
+            amountB *
+            priceB;
+        const totalValue =
+            marketValueA +
+            marketValueB;
+        /*
+         * 理論上 target
+         * 應該與 total value 相等。
+         */
+        const targetValueA =
+            targetA *
+            priceA;
+        const targetValueB =
+            targetB *
+            priceB;
+        /*
+         * Fee / slippage
+         *
+         * actual output
+         * 會比理論 output 少。
+         */
+        const feeRate =
+            Math.max(
+                0,
+                feePercent
+            ) / 100;
+        const slippageRate =
+            Math.max(
+                0,
+                slippagePercent
+            ) / 100;
+        const effectiveRate =
+            (1 - feeRate) *
+            (1 - slippageRate);
+        /*
+         * A 過多
+         */
+        if (
+            targetA <
+            amountA
+        ) {
+            const sellA =
+                amountA -
+                targetA;
+            const theoreticalB =
+                sellA *
+                priceA /
+                priceB;
+            const actualB =
+                theoreticalB *
+                effectiveRate;
+            return {
+                direction: "SELL_A",
+                sellA,
+                receiveB:
+                actualB,
+                targetA,
+                targetB,
+                finalA:
+                    amountA -
+                    sellA,
+                finalB:
+                    amountB +
+                    actualB,
+                theoreticalB,
+                totalValue
+            };
+        }
+        /*
+         * B 過多
+         */
+        if (
+            targetB <
+            amountB
+        ) {
+            const sellB =
+                amountB -
+                targetB;
+            const theoreticalA =
+                sellB *
+                priceB /
+                priceA;
+            const actualA =
+                theoreticalA *
+                effectiveRate;
+            return {
+                direction: "SELL_B",
+                sellB,
+                receiveA:
+                actualA,
+                targetA,
+                targetB,
+                finalA:
+                    amountA +
+                    actualA,
+                finalB:
+                    amountB -
+                    sellB,
+                theoreticalA,
+                totalValue
+            };
+        }
+        /*
+         * 已經接近目標
+         */
+        return {
+            direction: "NONE",
+            sellA: 0,
+            sellB: 0,
+            receiveA: 0,
+            receiveB: 0,
+            targetA,
+            targetB,
+            finalA: amountA,
+            finalB: amountB,
+            totalValue
+        };
+    }
+    /* =========================================================
+       MAIN CALCULATE
+    ========================================================= */
+    function calculate() {
+        const amountA =
+            parseFloat(
+                document.getElementById(
+                    "amountA"
+                ).value
+            );
+        const amountB =
+            parseFloat(
+                document.getElementById(
+                    "amountB"
+                ).value
+            );
+        const priceA =
+            parseFloat(
+                document.getElementById(
+                    "priceA"
+                ).value
+            );
+        const priceB =
+            parseFloat(
+                document.getElementById(
+                    "priceB"
+                ).value
+            );
+        const lower =
+            parseFloat(
+                document.getElementById(
+                    "minPrice"
+                ).value
+            );
+        const upper =
+            parseFloat(
+                document.getElementById(
+                    "maxPrice"
+                ).value
+            );
+        let current =
+            parseFloat(
+                document.getElementById(
+                    "currentPrice"
+                ).value
+            );
+        const feePercent =
+            parseFloat(
+                document.getElementById(
+                    "swapFee"
+                ).value
+            ) || 0;
+        const slippagePercent =
+            parseFloat(
+                document.getElementById(
+                    "slippage"
+                ).value
+            ) || 0;
+        const result =
+            document.getElementById(
+                "result"
+            );
+        const symbolA =
+            getSymbol("A");
+        const symbolB =
+            getSymbol("B");
+        /* =====================================================
+           VALIDATION
+        ====================================================== */
+        if (
+            !Number.isFinite(amountA) ||
+            !Number.isFinite(amountB) ||
+            !Number.isFinite(priceA) ||
+            !Number.isFinite(priceB) ||
+            !Number.isFinite(lower) ||
+            !Number.isFinite(upper)
+        ) {
+            alert(
+                "請完整輸入 Token 數量、Token USD 價格與 LP Range"
+            );
+            return;
+        }
+        if (
+            amountA < 0 ||
+            amountB < 0 ||
+            priceA <= 0 ||
+            priceB <= 0 ||
+            lower <= 0 ||
+            upper <= 0
+        ) {
+            alert(
+                "數值必須大於或等於 0"
+            );
+            return;
+        }
+        if (
+            lower >= upper
+        ) {
+            alert(
+                "最低價格必須小於最高價格"
+            );
+            return;
+        }
+        /*
+         * 如果沒有 Current Price
+         *
+         * 使用市場價格
+         */
+        if (
+            !Number.isFinite(current) ||
+            current <= 0
+        ) {
+            current =
+                priceA /
+                priceB;
+            document.getElementById(
+                "currentPrice"
+            ).value =
+                current;
+        }
+        /*
+         * 市場價格
+         */
+        const marketPrice =
+            priceA /
+            priceB;
+        /*
+         * 目前資產總價值
+         *
+         * 這就是整個計算的「固定本金」
+         */
+        const valueA =
+            amountA *
+            priceA;
+        const valueB =
+            amountB *
+            priceB;
+        const totalValue =
+            valueA +
+            valueB;
+        if (
+            totalValue <= 0
+        ) {
+            alert(
+                "目前資產總價值必須大於 0"
+            );
+            return;
+        }
+        /* =====================================================
+           CURRENT PRICE WARNING
+        ====================================================== */
+        const priceDifference =
+            Math.abs(
+                current -
+                marketPrice
+            ) /
+            marketPrice;
+        /*
+         * 如果手動輸入的 current
+         * 跟 USD 價格差太多，
+         * 提醒使用者。
+         */
+        let priceWarning = "";
+        if (
+            priceDifference >
+            0.005
+        ) {
+            priceWarning = `
+            <div class="warning">
+                ⚠️
+                你輸入的 Current Price
+                與 Token USD 價格推導出的市場價格
+                有明顯差異。
+                <br><br>
+                USD 推導：
+                <b>
+                    ${formatNumber(
+                marketPrice,
+                12
+            )}
+                </b>
+                <br>
+                Current Price：
+                <b>
+                    ${formatNumber(
+                current,
+                12
+            )}
+                </b>
+                <br><br>
+                建議按
+                「使用目前市場價格」。
+            </div>
+        `;
+        }
+        /* =====================================================
+           V3 TARGET
+        ====================================================== */
+        let lp;
+        try {
+            lp =
+                calculateTargetLP(
+                    totalValue,
+                    priceA,
+                    current,
+                    lower,
+                    upper
+                );
+        }
+        catch (error) {
+            result.innerHTML = `
+            <div class="danger">
+                ${escapeHtml(
+                error.message
+            )}
+            </div>
+        `;
+            return;
+        }
+        /* =====================================================
+           SWAP
+        ====================================================== */
+        /*
+         * 注意：
+         *
+         * target LP 使用 current price
+         *
+         * Swap 則使用 priceA / priceB
+         *
+         * 最理想情況：
+         *
+         * current == marketPrice
+         *
+         * 這樣才是同一個市場狀態。
+         */
+        const swap =
+            calculateSwap(
+                amountA,
+                amountB,
+                lp.amountA,
+                lp.amountB,
+                priceA,
+                priceB,
+                feePercent,
+                slippagePercent
+            );
+        /* =====================================================
+           HTML
+        ====================================================== */
+        let html = "";
+        /* =====================================================
+           1. TOTAL
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                💰 目前資產
+            </span>
+            <hr>
+            ${symbolA}：
+            <b>
+                ${formatNumber(
+            amountA,
+            12
+        )}
+            </b>
+            <br>
+            ${symbolA} 價值：
+            <b>
+                ${formatNumber(
+            valueA,
+            2
+        )}
+            </b>
+            USD
+            <hr>
+            ${symbolB}：
+            <b>
+                ${formatNumber(
+            amountB,
+            12
+        )}
+            </b>
+            <br>
+            ${symbolB} 價值：
+            <b>
+                ${formatNumber(
+            valueB,
+            2
+        )}
+            </b>
+            USD
+            <hr>
+            <span class="big">
+                總資產：
+                ${formatNumber(
+            totalValue,
+            2
+        )}
+                USD
+            </span>
+            <br>
+            <span class="small">
+                ⚠️ 這個總資產是本次計算的固定本金。
+                Swap 只改變 A/B 組成，不會憑空增加資產。
+            </span>
+        </div>
+    `;
+        /* =====================================================
+           2. MARKET
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                📈 市場 / LP 價格
+            </span>
+            <hr>
+            市場價格：
+            <b>
+                ${formatNumber(
+            marketPrice,
+            12
+        )}
+            </b>
+            ${symbolB}/${symbolA}
+            <br>
+            LP Current Price：
+            <b>
+                ${formatNumber(
+            current,
+            12
+        )}
+            </b>
+            ${symbolB}/${symbolA}
+            <br><br>
+            LP Range：
+            <b>
+                ${formatNumber(
+            lower,
+            12
+        )}
+            </b>
+            ~
+            <b>
+                ${formatNumber(
+            upper,
+            12
+        )}
+            </b>
+            ${symbolB}/${symbolA}
+            ${priceWarning}
+        </div>
+    `;
+        /* =====================================================
+           3. LP STATUS
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                🥞 PancakeSwap V3 狀態
+            </span>
+            <hr>
+    `;
+        if (
+            current <= lower
+        ) {
+            html += `
+            <div class="warning">
+                📉
+                Current Price
+                低於 Range
+                <br><br>
+                V3 Position
+                理論上為：
+                <br>
+                <span class="huge">
+                    100% ${symbolA}
+                </span>
+                <br><br>
+                因此建立這個 LP
+                前需要以
+                <b>${symbolA}</b>
+                為主。
+            </div>
+        `;
+        }
+        else if (
+            current >= upper
+        ) {
+            html += `
+            <div class="warning">
+                📈
+                Current Price
+                高於 Range
+                <br><br>
+                V3 Position
+                理論上為：
+                <br>
+                <span class="huge">
+                    100% ${symbolB}
+                </span>
+                <br><br>
+                因此建立這個 LP
+                前需要以
+                <b>${symbolB}</b>
+                為主。
+            </div>
+        `;
+        }
+        else {
+            html += `
+            <div class="success">
+                🟢 Current Price
+                位於 LP Range 內。
+                <br><br>
+                LP 同時需要：
+                <b>
+                    ${symbolA}
+                </b>
+                +
+                <b>
+                    ${symbolB}
+                </b>
+            </div>
+        `;
+        }
+        html += `</div>`;
+        /* =====================================================
+           4. TARGET LP
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                🎯 這筆總資產建立 LP 所需要的數量
+            </span>
+            <hr>
+            ${symbolA}：
+            <b class="blue">
+                ${formatNumber(
+            lp.amountA,
+            12
+        )}
+            </b>
+            <br>
+            ${symbolB}：
+            <b class="blue">
+                ${formatNumber(
+            lp.amountB,
+            12
+        )}
+            </b>
+            <hr>
+            ${symbolA}
+            價值比例：
+            <b>
+                ${(lp.ratioA * 100).toFixed(4)}%
+            </b>
+            <br>
+            ${symbolB}
+            價值比例：
+            <b>
+                ${(lp.ratioB * 100).toFixed(4)}%
+            </b>
+        </div>
+    `;
+        /* =====================================================
+           5. THE MOST IMPORTANT
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                ⭐ 最重要：你到底要賣哪個幣？
+            </span>
+            <hr>
+    `;
+        if (
+            swap.direction ===
+            "SELL_A"
+        ) {
+            html += `
+            <div class="danger">
+                🔴
+                <span class="huge">
+                    ${symbolA} 過多
+                </span>
+                <br><br>
+                你應該：
+                <br>
+                <span class="big">
+                    賣 ${formatNumber(
+                swap.sellA,
+                12
+            )}
+                    ${symbolA}
+                </span>
+                <br>
+                換成
+                <span class="big green">
+                    ${symbolB}
+                </span>
+            </div>
+            <div class="swap-direction">
+                ${symbolA}
+                →
+                ${symbolB}
+            </div>
+            <hr>
+            理論應收到：
+            <b class="green">
+                ${formatNumber(
+                swap.theoreticalB,
+                12
+            )}
+                ${symbolB}
+            </b>
+            <br>
+            按你設定的 Fee / Slippage
+            後預估收到：
+            <b class="green">
+                ${formatNumber(
+                swap.receiveB,
+                12
+            )}
+                ${symbolB}
+            </b>
+        `;
+        }
+        else if (
+            swap.direction ===
+            "SELL_B"
+        ) {
+            html += `
+            <div class="danger">
+                🔴
+                <span class="huge">
+                    ${symbolB} 過多
+                </span>
+                <br><br>
+                你應該：
+                <br>
+                <span class="big">
+                    賣 ${formatNumber(
+                swap.sellB,
+                12
+            )}
+                    ${symbolB}
+                </span>
+                <br>
+                換成
+                <span class="big green">
+                    ${symbolA}
+                </span>
+            </div>
+            <div class="swap-direction">
+                ${symbolB}
+                →
+                ${symbolA}
+            </div>
+            <hr>
+            理論應收到：
+            <b class="green">
+                ${formatNumber(
+                swap.theoreticalA,
+                12
+            )}
+                ${symbolA}
+            </b>
+            <br>
+            按你設定的 Fee / Slippage
+            後預估收到：
+            <b class="green">
+                ${formatNumber(
+                swap.receiveA,
+                12
+            )}
+                ${symbolA}
+            </b>
+        `;
+        }
+        else {
+            html += `
+            <div class="success">
+                ✅
+                <span class="big">
+                    目前資產比例已經符合
+                    PancakeSwap V3 Range
+                </span>
+                <br><br>
+                不需要額外 Swap。
+            </div>
+        `;
+        }
+        html += `</div>`;
+        /* =====================================================
+           6. AFTER SWAP
+        ====================================================== */
+        let finalA;
+        let finalB;
+        if (
+            swap.direction ===
+            "SELL_A"
+        ) {
+            /*
+             * 實際有 Fee / Slippage 時，
+             * 收到 B 會少一點。
+             *
+             * 因此這裡顯示實際 Swap 後
+             * 的理論資產。
+             */
+            finalA =
+                amountA -
+                swap.sellA;
+            finalB =
+                amountB +
+                swap.receiveB;
+        }
+        else if (
+            swap.direction ===
+            "SELL_B"
+        ) {
+            finalA =
+                amountA +
+                swap.receiveA;
+            finalB =
+                amountB -
+                swap.sellB;
+        }
+        else {
+            finalA =
+                amountA;
+            finalB =
+                amountB;
+        }
+        /* =====================================================
+           7. IDEAL AFTER SWAP
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                💱 理想交易後資產
+            </span>
+            <hr>
+            ${symbolA}：
+            <b class="big">
+                ${formatNumber(
+            finalA,
+            12
+        )}
+            </b>
+            <br>
+            ${symbolB}：
+            <b class="big">
+                ${formatNumber(
+            finalB,
+            12
+        )}
+            </b>
+            <hr>
+            <span class="small">
+                這裡會受到你設定的
+                Swap Fee / Slippage
+                影響。
+            </span>
+        </div>
+    `;
+        /* =====================================================
+           8. IDEAL NO-FEE RESULT
+        ====================================================== */
+        let idealFinalA =
+            amountA;
+        let idealFinalB =
+            amountB;
+        if (
+            swap.direction ===
+            "SELL_A"
+        ) {
+            idealFinalA =
+                amountA -
+                swap.sellA;
+            idealFinalB =
+                amountB +
+                swap.theoreticalB;
+        }
+        else if (
+            swap.direction ===
+            "SELL_B"
+        ) {
+            idealFinalA =
+                amountA +
+                swap.theoreticalA;
+            idealFinalB =
+                amountB -
+                swap.sellB;
+        }
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                🥞 理論上可直接建 LP
+            </span>
+            <hr>
+            ${symbolA}：
+            <b class="blue">
+                ${formatNumber(
+            idealFinalA,
+            12
+        )}
+            </b>
+            <br>
+            ${symbolB}：
+            <b class="blue">
+                ${formatNumber(
+            idealFinalB,
+            12
+        )}
+            </b>
+            <hr>
+            目標：
+            <br>
+            ${symbolA}：
+            ${formatNumber(
+            lp.amountA,
+            12
+        )}
+            <br>
+            ${symbolB}：
+            ${formatNumber(
+            lp.amountB,
+            12
+        )}
+        </div>
+    `;
+        /* =====================================================
+           9. EXPLANATION
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                🧠 計算邏輯
+            </span>
+            <hr>
+            <div class="formula">
+                目前總資產
+                =
+                A 數量 × A USD
+                +
+                B 數量 × B USD
+                <br><br>
+                LP 使用：
+                sqrt(P)
+                <br>
+                amountA
+                =
+                L ×
+                (sqrtUpper - sqrtCurrent)
+                /
+                (sqrtCurrent × sqrtUpper)
+                <br><br>
+                amountB
+                =
+                L ×
+                (sqrtCurrent - sqrtLower)
+            </div>
+            <br>
+            這個計算器的核心不是
+            「把錢一半一半分」。
+            <br><br>
+            而是：
+            <br>
+            <b>
+                你的總資產固定
+            </b>
+            ↓
+            <br>
+            算出這個 PancakeSwap V3
+            Range 在目前價格需要的
+            A / B 組成
+            ↓
+            <br>
+            比較你目前持有量
+            ↓
+            <br>
+            判斷：
+            <br>
+            <b class="red">
+                A 過多 → 賣 A
+            </b>
+            <br>
+            或
+            <br>
+            <b class="red">
+                B 過多 → 賣 B
+            </b>
+            ↓
+            <br>
+            得到可以建立 LP 的 A / B。
+        </div>
+    `;
+        /* =====================================================
+           10. IMPORTANT
+        ====================================================== */
+        html += `
+        <div class="result-box">
+            <span class="badge">
+                ⚠️ 實際 PancakeSwap 交易注意事項
+            </span>
+            <hr>
+            本計算器是「建池前資產平衡計算」。
+            <br><br>
+            實際執行 Swap 時還會受到：
+            <br>
+            • Swap Fee
+            <br>
+            • Price Impact
+            <br>
+            • Slippage
+            <br>
+            • MEV
+            <br>
+            • Token Decimal
+            <br>
+            • PancakeSwap V3 Tick
+            <br>
+            • Tick Spacing
+            <br>
+            • Pool Fee Tier
+            <br>
+            等因素影響。
+            <br><br>
+            所以實際操作時，
+            建議不要把最後一個最小單位
+            全部拿去建池。
+        </div>
+    `;
+        result.innerHTML =
+            html;
+    }
+    /* =========================================================
+       ESCAPE HTML
+    ========================================================= */
+    function escapeHtml(
+        text
+    ) {
+        return String(text)
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+    }
+    /* =========================================================
+       NETWORK CHANGE
+    ========================================================= */
+    document
+        .getElementById("network")
+        .addEventListener(
+            "change",
+            async () => {
+                const tokenA =
+                    document
+                        .getElementById(
+                            "tokenASearch"
+                        )
+                        .value
+                        .trim();
+                const tokenB =
+                    document
+                        .getElementById(
+                            "tokenBSearch"
+                        )
+                        .value
+                        .trim();
+                if (
+                    tokenA ||
+                    tokenB
+                ) {
+                    if (tokenA) {
+                        await searchTokenImmediate(
+                            "A",
+                            tokenA
+                        );
+                    }
+                    if (tokenB) {
+                        await searchTokenImmediate(
+                            "B",
+                            tokenB
+                        );
+                    }
+                    updatePairPrice();
+                }
+            }
+        );
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
+    window.addEventListener(
+        "load",
+        async () => {
+            setupSearch("A");
+            setupSearch("B");
+            await Promise.all([
+                searchTokenImmediate(
+                    "A",
+                    "WMON"
+                ),
+                searchTokenImmediate(
+                    "B",
+                    "USDC"
+                )
+            ]);
+            updatePairPrice();
+            const marketPrice =
+                getMarketPrice();
+            if (marketPrice) {
+                document.getElementById(
+                    "currentPrice"
+                ).value =
+                    marketPrice;
+            }
+        }
+    );
 </script>
-
 </body>
 </html>
