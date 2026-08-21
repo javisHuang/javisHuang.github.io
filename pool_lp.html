@@ -2,183 +2,2771 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>糖漿池健康度計算器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PancakeSwap V3 Pool 健康度計算器</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-        h2, h3 { margin-bottom: 10px; }
-        .card {
-            display: flex; flex-wrap: wrap; background: #fff; padding: 10px;
-            margin-bottom: 10px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        * {
+            box-sizing: border-box;
         }
-        .card input { margin: 5px; padding: 6px; width: 120px; border-radius: 4px; border: 1px solid #ccc; }
-        .card button { margin: 5px; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; background: #fff; border-radius: 6px; overflow: hidden; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background: #e0e0e0; }
-        .delete-btn { background: #ff6666; color: #fff; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f6fa;
+            color: #222;
+            font-family:
+                    Arial,
+                    "Microsoft JhengHei",
+                    "Noto Sans TC",
+                    sans-serif;
+        }
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+        h1 {
+            margin-bottom: 6px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .subtitle {
+            color: #777;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 15px rgba(0,0,0,.07);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns:
+            160px 1fr
+            160px 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+        label {
+            font-weight: bold;
+        }
+        select,
+        input,
+        button {
+            font: inherit;
+        }
+        select,
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d5d7dc;
+            border-radius: 8px;
+            background: #fff;
+        }
+        input[readonly] {
+            background: #f5f6f8;
+        }
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: .88;
+        }
+        .primary {
+            background: #7b3ff2;
+            color: #fff;
+        }
+        .green {
+            background: #16a05d;
+            color: #fff;
+        }
+        .gray {
+            background: #e8e9ed;
+            color: #222;
+        }
+        .red {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f1f2f5;
+            line-height: 1.6;
+        }
+        .status.ok {
+            background: #eaf8f0;
+        }
+        .status.error {
+            background: #fff0ef;
+            color: #b42318;
+        }
+        .fee-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .fee-card {
+            border: 1px solid #e1e2e6;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #fafafa;
+        }
+        .fee-card:hover {
+            background: #f1edff;
+            border-color: #7b3ff2;
+        }
+        .fee-card.selected {
+            background: #eee8ff;
+            border-color: #7b3ff2;
+        }
+        .fee-title {
+            font-weight: bold;
+            font-size: 17px;
+        }
+        .fee-address {
+            font-size: 11px;
+            color: #777;
+            margin-top: 6px;
+            word-break: break-all;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .stat {
+            background: #f8f9fb;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-label {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 7px;
+        }
+        .stat-value {
+            font-size: 19px;
+            font-weight: bold;
+        }
+        .health {
+            margin-top: 18px;
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+            background: #f8f9fb;
+        }
+        .health-score {
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .health-level {
+            font-size: 21px;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+        .health-desc {
+            margin-top: 8px;
+            color: #666;
+        }
+        .warning {
+            margin-top: 15px;
+            padding: 12px;
+            background: #fff8df;
+            border-radius: 8px;
+            color: #795800;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+            white-space: nowrap;
+        }
+        th {
+            background: #eee;
+        }
+        tr:hover td {
+            background: #fafafa;
+        }
+        .pool-link {
+            color: #6c36c9;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .small {
+            color: #777;
+            font-size: 12px;
+        }
+        .level-good {
+            color: #138a4b;
+            font-weight: bold;
+        }
+        .level-mid {
+            color: #a36a00;
+            font-weight: bold;
+        }
+        .level-bad {
+            color: #c62828;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .fee-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .fee-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-
-<h2>糖漿池健康度計算器</h2>
-
-<h3>新增糖漿池</h3>
-<div class="card" id="inputCard">
-    <input type="text" id="assetPair" placeholder="資產對" required>
-    <input type="number" step="0.01" id="fee" placeholder="手續費 (%)" required>
-    <input type="number" step="0.01" id="apr" placeholder="APR (%)" required>
-    <input type="number" step="0.01" id="tvl" placeholder="TVL ($)" required>
-    <input type="number" step="0.01" id="volume" placeholder="24H 交易量 ($)" required>
-    <button onclick="addPool()">新增池子</button>
+<div class="container">
+    <h1>🥞 PancakeSwap V3 Pool 健康度計算器</h1>
+    <div class="subtitle">
+        純 HTML / JavaScript · GitHub Pages 可用 · 直接讀 BNB Chain 鏈上資料
+    </div>
+    <!-- ========================= -->
+    <!-- 搜尋 -->
+    <!-- ========================= -->
+    <div class="card">
+        <h2>① 選擇 PancakeSwap V3 資產對</h2>
+        <div class="grid">
+            <label>Token A</label>
+            <select id="tokenA">
+                <option value="">請選擇 Token A</option>
+            </select>
+            <label>Token B</label>
+            <select id="tokenB">
+                <option value="">請選擇 Token B</option>
+            </select>
+            <label>Fee Tier</label>
+            <select id="feeTier">
+                <option value="100">
+                    0.01%
+                </option>
+                <option value="500">
+                    0.05%
+                </option>
+                <option value="2500">
+                    0.25%
+                </option>
+                <option value="10000">
+                    1.00%
+                </option>
+            </select>
+            <label>RPC</label>
+            <select id="rpcSelect">
+                <option value="https://bsc-dataseed.binance.org/">
+                    BNB Chain RPC 1
+                </option>
+                <option value="https://bsc-dataseed1.defibit.io/">
+                    BNB Chain RPC 2
+                </option>
+                <option value="https://bsc-dataseed1.ninicoin.io/">
+                    BNB Chain RPC 3
+                </option>
+            </select>
+        </div>
+        <div class="toolbar">
+            <button
+                    class="primary"
+                    onclick="findPools()"
+            >
+                🔍 搜尋 V3 Pool
+            </button>
+            <button
+                    class="gray"
+                    onclick="loadPoolFromAddress()"
+            >
+                📋 使用 Pool Address
+            </button>
+        </div>
+        <div style="margin-top:12px;">
+            <input
+                    id="manualPool"
+                    placeholder="如果你知道 Pool Address，可貼在這裡：0x..."
+            >
+        </div>
+        <div id="status" class="status">
+            等待搜尋。
+        </div>
+    </div>
+    <!-- ========================= -->
+    <!-- Pool 結果 -->
+    <!-- ========================= -->
+    <div
+            class="card"
+            id="poolResultCard"
+    >
+        <h2>② 找到的 V3 Pool</h2>
+        <div
+                id="feeResults"
+                class="fee-grid"
+        ></div>
+    </div>
+    <!-- ========================= -->
+    <!-- 詳細資料 -->
+    <!-- ========================= -->
+    <div
+            class="card"
+            id="detailCard"
+    >
+        <h2>③ Pool 詳細資料</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">
+                    資產對
+                </div>
+                <div
+                        class="stat-value"
+                        id="pairValue"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Fee Tier
+                </div>
+                <div
+                        class="stat-value"
+                        id="feeValue"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Token0
+                </div>
+                <div
+                        class="stat-value"
+                        id="token0Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Token1
+                </div>
+                <div
+                        class="stat-value"
+                        id="token1Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Liquidity
+                </div>
+                <div
+                        class="stat-value"
+                        id="liquidityValue"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Current Tick
+                </div>
+                <div
+                        class="stat-value"
+                        id="tickValue"
+                >
+                    -
+                </div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">
+                    Token0 Pool 餘額
+                </div>
+                <div
+                        class="stat-value"
+                        id="balance0Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Token1 Pool 餘額
+                </div>
+                <div
+                        class="stat-value"
+                        id="balance1Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Token0 USD
+                </div>
+                <div
+                        class="stat-value"
+                        id="price0Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Token1 USD
+                </div>
+                <div
+                        class="stat-value"
+                        id="price1Value"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    估算 TVL
+                </div>
+                <div
+                        class="stat-value"
+                        id="tvlValue"
+                >
+                    -
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">
+                    Pool Address
+                </div>
+                <div
+                        class="stat-value"
+                        style="font-size:12px;word-break:break-all;"
+                        id="poolAddressValue"
+                >
+                    -
+                </div>
+            </div>
+        </div>
+        <div class="health">
+            <div class="small">
+                V3 Pool 健康度
+            </div>
+            <div
+                    class="health-score"
+                    id="healthScore"
+            >
+                -
+            </div>
+            <div
+                    class="health-level"
+                    id="healthLevel"
+            >
+                尚未計算
+            </div>
+            <div
+                    class="health-desc"
+                    id="healthDesc"
+            >
+                -
+            </div>
+        </div>
+        <div class="warning">
+            ⚠️
+            本版本的 TVL 是依 Token 餘額與公開價格估算；
+            健康度主要反映「鏈上流動性與 Pool 狀態」。
+            <br>
+            本版本沒有把累積交易量冒充 24H Volume，
+            也沒有把累積 Fee 冒充 APR。
+        </div>
+        <div class="toolbar">
+            <button
+                    class="green"
+                    onclick="addToWatchlist()"
+            >
+                ⭐ 加入監控
+            </button>
+            <button
+                    class="primary"
+                    onclick="refreshSelectedPool()"
+            >
+                🔄 更新 Pool
+            </button>
+            <button
+                    class="gray"
+                    onclick="openPancakePool()"
+            >
+                🥞 開啟 PancakeSwap
+            </button>
+        </div>
+    </div>
+    <!-- ========================= -->
+    <!-- 監控 -->
+    <!-- ========================= -->
+    <div class="card">
+        <h2>④ 我的監控 Pool</h2>
+        <div class="toolbar">
+            <button
+                    class="primary"
+                    onclick="refreshWatchlist()"
+            >
+                🔄 更新全部
+            </button>
+            <button
+                    class="gray"
+                    onclick="clearWatchlist()"
+            >
+                清空監控
+            </button>
+        </div>
+        <div
+                class="small"
+                id="lastUpdate"
+        >
+            -
+        </div>
+        <br>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>
+                        #
+                    </th>
+                    <th>
+                        資產對
+                    </th>
+                    <th>
+                        Fee
+                    </th>
+                    <th>
+                        TVL
+                    </th>
+                    <th>
+                        Liquidity
+                    </th>
+                    <th>
+                        Tick
+                    </th>
+                    <th>
+                        健康度
+                    </th>
+                    <th>
+                        等級
+                    </th>
+                    <th>
+                        操作
+                    </th>
+                </tr>
+                </thead>
+                <tbody
+                        id="watchlistBody"
+                ></tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
-<h3>池子列表</h3>
-<table id="poolTable">
-    <thead>
-    <tr>
-        <th>資產對</th>
-        <th>手續費</th>
-        <th>APR (%)</th>
-        <th>TVL ($)</th>
-        <th>24H 交易量 ($)</th>
-        <th>健康度</th>
-        <th>健康度等級</th>
-        <th>操作</th>
-    </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
-
-<button onclick="calculateHealth()">計算健康度 & 排序</button>
-
 <script>
-    const maxTvl = 1000;
-    const defaultStability = 0.5;
-
-    // 初始化：載入 localStorage
-    let pools = JSON.parse(localStorage.getItem('pools') || '[]');
-    renderTable();
-
-    // 新增池子
-    function addPool() {
-        const assetPair = document.getElementById('assetPair').value.trim();
-        const fee = document.getElementById('fee').value;
-        const apr = document.getElementById('apr').value;
-        const tvl = document.getElementById('tvl').value;
-        const volume = document.getElementById('volume').value;
-
-        if (!assetPair || fee === '' || apr === '' || tvl === '' || volume === '') {
-            alert('請完整填寫所有欄位！');
+    /*
+    ==========================================================
+    PancakeSwap V3 - Single HTML Version
+    ==========================================================
+    用途：
+    GitHub Pages
+    localhost
+    直接瀏覽器開啟
+    不使用：
+    - The Graph
+    - Node.js
+    - Server
+    - API Key
+    資料：
+    直接透過 eth_call 讀 BNB Chain。
+    ==========================================================
+    */
+    /* ======================================================
+       PancakeSwap V3 Factory
+       ====================================================== */
+    const PANCAKE_V3_FACTORY =
+        "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865";
+    /* ======================================================
+       PancakeSwap V3 Fee
+       ====================================================== */
+    const FEES = [
+        100,
+        500,
+        2500,
+        10000
+    ];
+    /* ======================================================
+       常用 BSC Token
+       ======================================================
+       這些只是搜尋入口。
+       你可以自己增加 Token。
+       格式：
+       {
+           symbol: "ABC",
+           address: "0x...",
+           decimals: 18,
+           priceKey: "abc"
+       }
+       ====================================================== */
+    const TOKENS = [
+        {
+            symbol: "BNB",
+            address:
+                "0x0000000000000000000000000000000000000000",
+            decimals: 18,
+            priceKey: "wbnb"
+        },
+        {
+            symbol: "WBNB",
+            address:
+                "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            decimals: 18,
+            priceKey: "wbnb"
+        },
+        {
+            symbol: "USDT",
+            address:
+                "0x55d398326f99059fF775485246999027B3197955",
+            decimals: 18,
+            priceKey: "usdt"
+        },
+        {
+            symbol: "USDC",
+            address:
+                "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+            decimals: 18,
+            priceKey: "usdc"
+        },
+        {
+            symbol: "CAKE",
+            address:
+                "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+            decimals: 18,
+            priceKey: "cake"
+        },
+        {
+            symbol: "ETH",
+            address:
+                "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+            decimals: 18,
+            priceKey: "eth"
+        },
+        {
+            symbol: "BTCB",
+            address:
+                "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
+            decimals: 18,
+            priceKey: "btc"
+        },
+        {
+            symbol: "FDUSD",
+            address:
+                "0xc5f0f7B66764F6ec8C8DFF7BA683102295E2A7b2",
+            decimals: 18,
+            priceKey: "fdusd"
+        },
+        {
+            symbol: "XRP",
+            address:
+                "0x1D2F0da169ceB9fC6FfB4C7F9a4fD4fF5fF6aB8",
+            decimals: 18,
+            priceKey: "xrp"
+        },
+        {
+            symbol: "DOGE",
+            address:
+                "0xbA2aE424d960c26247Dd6c32edC70B295c744C43",
+            decimals: 8,
+            priceKey: "doge"
+        }
+    ];
+    /*
+    ==========================================================
+    State
+    ==========================================================
+    */
+    let currentPool = null;
+    let watchlist =
+        JSON.parse(
+            localStorage.getItem(
+                "pancakeV3Watchlist"
+            ) || "[]"
+        );
+    /*
+    ==========================================================
+    初始化
+    ==========================================================
+    */
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+            populateTokenSelects();
+            renderWatchlist();
+            setStatus(
+                "ready",
+                "等待選擇 Token。"
+            );
+        }
+    );
+    /*
+    ==========================================================
+    Token Select
+    ==========================================================
+    */
+    function populateTokenSelects() {
+        const a =
+            document.getElementById(
+                "tokenA"
+            );
+        const b =
+            document.getElementById(
+                "tokenB"
+            );
+        TOKENS.forEach(
+            (token, index) => {
+                const optionA =
+                    document.createElement(
+                        "option"
+                    );
+                optionA.value =
+                    token.address;
+                optionA.textContent =
+                    token.symbol;
+                a.appendChild(
+                    optionA
+                );
+                const optionB =
+                    document.createElement(
+                        "option"
+                    );
+                optionB.value =
+                    token.address;
+                optionB.textContent =
+                    token.symbol;
+                b.appendChild(
+                    optionB
+                );
+            }
+        );
+        a.value =
+            TOKENS[0].address;
+        b.value =
+            TOKENS[2].address;
+    }
+    /*
+    ==========================================================
+    RPC
+    ==========================================================
+    */
+    function getRPC() {
+        return document.getElementById(
+            "rpcSelect"
+        ).value;
+    }
+    /*
+    ==========================================================
+    JSON RPC
+    ==========================================================
+    */
+    async function rpc(
+        method,
+        params
+    ) {
+        const response =
+            await fetch(
+                getRPC(),
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: Date.now(),
+                        method,
+                        params
+                    })
+                }
+            );
+        if (!response.ok) {
+            throw new Error(
+                "RPC HTTP " +
+                response.status
+            );
+        }
+        const data =
+            await response.json();
+        if (data.error) {
+            throw new Error(
+                data.error.message ||
+                "RPC Error"
+            );
+        }
+        return data.result;
+    }
+    /*
+    ==========================================================
+    eth_call
+    ==========================================================
+    */
+    async function ethCall(
+        to,
+        data
+    ) {
+        return rpc(
+            "eth_call",
+            [
+                {
+                    to,
+                    data
+                },
+                "latest"
+            ]
+        );
+    }
+    /*
+    ==========================================================
+    Function selector
+    ==========================================================
+    這裡直接使用 ABI function selector。
+    ==========================================================
+    */
+    const SELECTOR = {
+        getPool:
+            "0x1698ee82",
+        token0:
+            "0x0dfe1681",
+        token1:
+            "0xd21220a7",
+        fee:
+            "0xddca3f43",
+        liquidity:
+            "0x1a686502",
+        slot0:
+            "0x3850c7bd",
+        decimals:
+            "0x313ce567",
+        symbol:
+            "0x95d89b41",
+        balanceOf:
+            "0x70a08231"
+    };
+    /*
+    ==========================================================
+    address encoding
+    ==========================================================
+    */
+    function encodeAddress(
+        address
+    ) {
+        return address
+            .replace(
+                /^0x/,
+                ""
+            )
+            .padStart(
+                64,
+                "0"
+            );
+    }
+    /*
+    ==========================================================
+    uint24 encoding
+    ==========================================================
+    */
+    function encodeUint24(
+        value
+    ) {
+        return BigInt(value)
+            .toString(16)
+            .padStart(
+                64,
+                "0"
+            );
+    }
+    /*
+    ==========================================================
+    解 uint
+    ==========================================================
+    */
+    function decodeUint(
+        hex
+    ) {
+        return BigInt(
+            "0x" +
+            hex.replace(
+                /^0x/,
+                ""
+            )
+        );
+    }
+    /*
+    ==========================================================
+    decode address
+    ==========================================================
+    */
+    function decodeAddress(
+        hex
+    ) {
+        const clean =
+            hex.replace(
+                /^0x/,
+                ""
+            );
+        return (
+            "0x" +
+            clean.slice(
+                clean.length - 40
+            )
+        );
+    }
+    /*
+    ==========================================================
+    decode int256
+    ==========================================================
+    */
+    function decodeInt256(
+        hex
+    ) {
+        let value =
+            BigInt(
+                "0x" +
+                hex.replace(
+                    /^0x/,
+                    ""
+                )
+            );
+        const max =
+            1n << 255n;
+        if (value >= max) {
+            value -=
+                1n << 256n;
+        }
+        return value;
+    }
+    /*
+    ==========================================================
+    Get Pool
+    ==========================================================
+    */
+    async function getPool(
+        tokenA,
+        tokenB,
+        fee
+    ) {
+        const data =
+            SELECTOR.getPool +
+            encodeAddress(tokenA) +
+            encodeAddress(tokenB) +
+            encodeUint24(fee);
+        const result =
+            await ethCall(
+                PANCAKE_V3_FACTORY,
+                data
+            );
+        if (
+            !result ||
+            result === "0x"
+        ) {
+            return null;
+        }
+        const address =
+            decodeAddress(result);
+        if (
+            /^0x0+$/.test(
+                address.slice(2)
+            )
+        ) {
+            return null;
+        }
+        return address;
+    }
+    /*
+    ==========================================================
+    搜尋全部 Fee Tier
+    ==========================================================
+    */
+    async function findPools() {
+        const tokenA =
+            document.getElementById(
+                "tokenA"
+            ).value;
+        const tokenB =
+            document.getElementById(
+                "tokenB"
+            ).value;
+        if (
+            !tokenA ||
+            !tokenB
+        ) {
+            setStatus(
+                "error",
+                "請選擇 Token A / Token B。"
+            );
             return;
         }
-
-        const pool = { assetPair, fee: parseFloat(fee), apr: parseFloat(apr), tvl: parseFloat(tvl), volume: parseFloat(volume) };
-        pools.push(pool);
-        savePools();
-        renderTable();
-
-        // 清空輸入欄位
-        document.getElementById('assetPair').value = '';
-        document.getElementById('fee').value = '';
-        document.getElementById('apr').value = '';
-        document.getElementById('tvl').value = '';
-        document.getElementById('volume').value = '';
-    }
-
-    // 儲存到 localStorage
-    function savePools() {
-        localStorage.setItem('pools', JSON.stringify(pools));
-    }
-
-    // 渲染表格
-    function renderTable() {
-        const table = document.getElementById('poolTable').getElementsByTagName('tbody')[0];
-        table.innerHTML = '';
-
-        pools.forEach((pool, index) => {
-            const row = table.insertRow();
-            row.insertCell(0).textContent = pool.assetPair;
-            row.insertCell(1).textContent = pool.fee.toFixed(2) + '%';
-            row.insertCell(2).textContent = pool.apr.toFixed(2);
-            row.insertCell(3).textContent = pool.tvl.toFixed(2);
-            row.insertCell(4).textContent = pool.volume.toFixed(2);
-            row.insertCell(5).textContent = pool.health ? pool.health.toFixed(2) : ''; // 健康度數字
-            row.insertCell(6).textContent = pool.comment || ''; // 健康度等級
-            const delBtn = document.createElement('button');
-            delBtn.textContent = '刪除';
-            delBtn.className = 'delete-btn';
-            delBtn.onclick = () => deletePool(index);
-            row.insertCell(7).appendChild(delBtn);
-        });
-    }
-
-    // 刪除池子
-    function deletePool(index) {
-        if (confirm('確定要刪除這個池子嗎？')) {
-            pools.splice(index, 1);
-            savePools();
-            renderTable();
+        if (
+            tokenA.toLowerCase() ===
+            tokenB.toLowerCase()
+        ) {
+            setStatus(
+                "error",
+                "Token A 與 Token B 不能相同。"
+            );
+            return;
+        }
+        setStatus(
+            "ready",
+            "⏳ 正在直接查詢 PancakeSwap V3 Factory..."
+        );
+        const result =
+            document.getElementById(
+                "feeResults"
+            );
+        result.innerHTML = "";
+        try {
+            const promises =
+                FEES.map(
+                    fee =>
+                        getPool(
+                            tokenA,
+                            tokenB,
+                            fee
+                        )
+                );
+            const pools =
+                await Promise.all(
+                    promises
+                );
+            let found = 0;
+            pools.forEach(
+                (pool, index) => {
+                    if (!pool) {
+                        return;
+                    }
+                    found++;
+                    createFeeCard(
+                        pool,
+                        FEES[index]
+                    );
+                }
+            );
+            if (found === 0) {
+                setStatus(
+                    "error",
+                    "找不到這個 Token Pair 的 PancakeSwap V3 Pool。"
+                );
+                return;
+            }
+            setStatus(
+                "ok",
+                `✅ 找到 ${found} 個 PancakeSwap V3 Pool。`
+            );
+        } catch (error) {
+            console.error(error);
+            setStatus(
+                "error",
+                "查詢失敗：" +
+                error.message
+            );
         }
     }
-
-    // TVL 分數
-    function tvlScore(tvl) {
-        if (tvl < 50_000) return 1;
-        else if (tvl < 200_000) return 3;
-        else if (tvl < 500_000) return 6;
-        else if (tvl < 1_000_000) return 8;
-        else return 10;
+    /*
+    ==========================================================
+    Fee Card
+    ==========================================================
+    */
+    function createFeeCard(
+        pool,
+        fee
+    ) {
+        const container =
+            document.getElementById(
+                "feeResults"
+            );
+        const card =
+            document.createElement(
+                "div"
+            );
+        card.className =
+            "fee-card";
+        const feeText =
+            feeToPercent(fee);
+        card.innerHTML = `
+        <div class="fee-title">
+            ${feeText}
+        </div>
+        <div>
+            Pool 已存在
+        </div>
+        <div class="fee-address">
+            ${pool}
+        </div>
+    `;
+        card.onclick =
+            () => {
+                document
+                    .querySelectorAll(
+                        ".fee-card"
+                    )
+                    .forEach(
+                        x =>
+                            x.classList.remove(
+                                "selected"
+                            )
+                    );
+                card.classList.add(
+                    "selected"
+                );
+                loadPool(
+                    pool,
+                    fee
+                );
+            };
+        container.appendChild(
+            card
+        );
     }
-
-    // 交易量分數
-    function volumeScore(volume, tvl) {
-        const ratio = volume / tvl;
-        return Math.min(ratio * 2.5, 10);
+    /*
+    ==========================================================
+    Load Pool
+    ==========================================================
+    */
+    async function loadPool(
+        poolAddress,
+        fee
+    ) {
+        setStatus(
+            "ready",
+            "⏳ 正在讀取 Pool 鏈上資料..."
+        );
+        try {
+            const [
+                token0Raw,
+                token1Raw,
+                feeRaw,
+                liquidityRaw,
+                slot0Raw
+            ] =
+                await Promise.all([
+                    ethCall(
+                        poolAddress,
+                        SELECTOR.token0
+                    ),
+                    ethCall(
+                        poolAddress,
+                        SELECTOR.token1
+                    ),
+                    ethCall(
+                        poolAddress,
+                        SELECTOR.fee
+                    ),
+                    ethCall(
+                        poolAddress,
+                        SELECTOR.liquidity
+                    ),
+                    ethCall(
+                        poolAddress,
+                        SELECTOR.slot0
+                    )
+                ]);
+            const token0 =
+                decodeAddress(
+                    token0Raw
+                );
+            const token1 =
+                decodeAddress(
+                    token1Raw
+                );
+            const liquidity =
+                decodeUint(
+                    liquidityRaw
+                );
+            const poolFee =
+                Number(
+                    decodeUint(
+                        feeRaw
+                    )
+                );
+            /*
+            slot0：
+            sqrtPriceX96
+            tick
+            observationIndex
+            observationCardinality
+            observationCardinalityNext
+            feeProtocol
+            unlocked
+            */
+            const slotClean =
+                slot0Raw.replace(
+                    /^0x/,
+                    ""
+                );
+            const sqrtPriceX96 =
+                decodeUint(
+                    "0x" +
+                    slotClean.slice(
+                        0,
+                        64
+                    )
+                );
+            const tick =
+                decodeInt256(
+                    "0x" +
+                    slotClean.slice(
+                        64,
+                        128
+                    )
+                );
+            currentPool = {
+                address:
+                poolAddress,
+                fee:
+                poolFee,
+                token0:
+                token0,
+                token1:
+                token1,
+                liquidity:
+                liquidity,
+                sqrtPriceX96:
+                sqrtPriceX96,
+                tick:
+                tick
+            };
+            await enrichPool();
+            setStatus(
+                "ok",
+                "✅ Pool 資料更新完成。"
+            );
+        } catch (error) {
+            console.error(error);
+            setStatus(
+                "error",
+                "讀取 Pool 失敗：" +
+                error.message
+            );
+        }
     }
-
-    // APR 分數
-    function aprScore(apr) {
-        return Math.min(apr / 10, 10);
+    /*
+    ==========================================================
+    Enrich Pool
+    ==========================================================
+    */
+    async function enrichPool() {
+        const pool =
+            currentPool;
+        const [
+            token0Symbol,
+            token1Symbol,
+            token0Decimals,
+            token1Decimals,
+            balance0Raw,
+            balance1Raw
+        ] =
+            await Promise.all([
+                readSymbol(
+                    pool.token0
+                ),
+                readSymbol(
+                    pool.token1
+                ),
+                readDecimals(
+                    pool.token0
+                ),
+                readDecimals(
+                    pool.token1
+                ),
+                readBalance(
+                    pool.token0,
+                    pool.address
+                ),
+                readBalance(
+                    pool.token1,
+                    pool.address
+                )
+            ]);
+        pool.token0Symbol =
+            token0Symbol;
+        pool.token1Symbol =
+            token1Symbol;
+        pool.token0Decimals =
+            token0Decimals;
+        pool.token1Decimals =
+            token1Decimals;
+        pool.balance0 =
+            formatTokenAmount(
+                balance0Raw,
+                token0Decimals
+            );
+        pool.balance1 =
+            formatTokenAmount(
+                balance1Raw,
+                token1Decimals
+            );
+        /*
+        價格：
+        使用 CoinGecko 公開 API。
+        如果價格 API 失敗，
+        TVL 會顯示為不可用，
+        但 Pool 其他資料仍可使用。
+        */
+        const prices =
+            await getPrices();
+        pool.price0 =
+            getTokenPrice(
+                pool.token0,
+                token0Symbol,
+                prices
+            );
+        pool.price1 =
+            getTokenPrice(
+                pool.token1,
+                token1Symbol,
+                prices
+            );
+        pool.tvl =
+            calculateTVL(
+                pool.balance0,
+                pool.balance1,
+                pool.price0,
+                pool.price1
+            );
+        pool.health =
+            calculateHealth(
+                pool
+            );
+        renderPoolDetails();
     }
-
-    // 穩定度分數
-    function stabilityScore(volume, tvl) {
-        return Math.min((volume / tvl) * 2, 10);
+    /*
+    ==========================================================
+    ERC20 symbol
+    ==========================================================
+    */
+    async function readSymbol(
+        token
+    ) {
+        try {
+            const result =
+                await ethCall(
+                    token,
+                    SELECTOR.symbol
+                );
+            return decodeString(
+                result
+            );
+        } catch {
+            return shortAddress(
+                token
+            );
+        }
     }
-
-    // 健康度計算
-    function calculateHealth() {
-        pools.forEach(pool => {
-            const vScore = volumeScore(pool.volume, pool.tvl);
-            const aScore = aprScore(pool.apr);
-            const tScore = tvlScore(pool.tvl);
-            const sScore = stabilityScore(pool.volume, pool.tvl);
-
-            const health = 0.35 * vScore + 0.3 * aScore + 0.2 * tScore + 0.15 * sScore;
-            pool.health = health;
-
-            // 健康度等級
-            if (health < 3) pool.comment = "垃圾池";
-            else if (health < 5) pool.comment = "普通池";
-            else if (health < 7) pool.comment = "可做";
-            else if (health < 8.5) pool.comment = "健康池";
-            else pool.comment = "優質池";
+    /*
+    ==========================================================
+    ERC20 decimals
+    ==========================================================
+    */
+    async function readDecimals(
+        token
+    ) {
+        const result =
+            await ethCall(
+                token,
+                SELECTOR.decimals
+            );
+        return Number(
+            decodeUint(
+                result
+            )
+        );
+    }
+    /*
+    ==========================================================
+    ERC20 balanceOf
+    ==========================================================
+    */
+    async function readBalance(
+        token,
+        owner
+    ) {
+        return ethCall(
+            token,
+            SELECTOR.balanceOf +
+            encodeAddress(owner)
+        );
+    }
+    /*
+    ==========================================================
+    decode ABI string
+    ==========================================================
+    */
+    function decodeString(
+        hex
+    ) {
+        if (
+            !hex ||
+            hex === "0x"
+        ) {
+            return "?";
+        }
+        const clean =
+            hex.replace(
+                /^0x/,
+                ""
+            );
+        /*
+        有些 token symbol 使用
+        bytes32，
+        有些使用 dynamic string。
+        先嘗試 ABI dynamic。
+        */
+        try {
+            const offset =
+                Number(
+                    BigInt(
+                        "0x" +
+                        clean.slice(
+                            0,
+                            64
+                        )
+                    )
+                );
+            const length =
+                Number(
+                    BigInt(
+                        "0x" +
+                        clean.slice(
+                            offset * 2,
+                            offset * 2 + 64
+                        )
+                    )
+                );
+            const bytes =
+                clean.slice(
+                    offset * 2 + 64,
+                    offset * 2 + 64 +
+                    length * 2
+                );
+            const decoded =
+                hexToAscii(
+                    bytes
+                );
+            if (decoded) {
+                return decoded;
+            }
+        } catch {
+        }
+        /*
+        bytes32
+        */
+        const decoded =
+            hexToAscii(
+                clean.slice(
+                    0,
+                    64
+                )
+            );
+        return decoded || "?";
+    }
+    /*
+    ==========================================================
+    Hex → ASCII
+    ==========================================================
+    */
+    function hexToAscii(
+        hex
+    ) {
+        let output = "";
+        for (
+            let i = 0;
+            i < hex.length;
+            i += 2
+        ) {
+            const code =
+                parseInt(
+                    hex.substr(
+                        i,
+                        2
+                    ),
+                    16
+                );
+            if (
+                code === 0
+            ) {
+                break;
+            }
+            output +=
+                String.fromCharCode(
+                    code
+                );
+        }
+        return output;
+    }
+    /*
+    ==========================================================
+    Format token amount
+    ==========================================================
+    */
+    function formatTokenAmount(
+        raw,
+        decimals
+    ) {
+        const value =
+            BigInt(raw);
+        const divisor =
+            10n ** BigInt(
+            decimals
+            );
+        const integer =
+            value / divisor;
+        const fraction =
+            value % divisor;
+        const fractionString =
+            fraction
+                .toString()
+                .padStart(
+                    decimals,
+                    "0"
+                );
+        return (
+            integer.toString() +
+            "." +
+            fractionString
+        );
+    }
+    /*
+    ==========================================================
+    Prices
+    ==========================================================
+    */
+    async function getPrices() {
+        /*
+        CoinGecko simple price endpoint。
+        這只是用來換算 USD，
+        Pool 本身仍然來自 PancakeSwap V3 鏈上。
+        */
+        const ids = [
+            "binancecoin",
+            "tether",
+            "usd-coin",
+            "pancakeswap-token",
+            "ethereum",
+            "bitcoin",
+            "first-digital-usd",
+            "ripple",
+            "dogecoin"
+        ];
+        try {
+            const url =
+                "https://api.coingecko.com/api/v3/simple/price" +
+                "?ids=" +
+                encodeURIComponent(
+                    ids.join(",")
+                ) +
+                "&vs_currencies=usd";
+            const response =
+                await fetch(
+                    url
+                );
+            if (!response.ok) {
+                throw new Error(
+                    "Price API unavailable"
+                );
+            }
+            return await response.json();
+        } catch {
+            return {};
+        }
+    }
+    /*
+    ==========================================================
+    Token Price
+    ==========================================================
+    */
+    function getTokenPrice(
+        address,
+        symbol,
+        prices
+    ) {
+        const token =
+            TOKENS.find(
+                x =>
+                    x.address.toLowerCase() ===
+                    address.toLowerCase()
+            );
+        if (!token) {
+            return null;
+        }
+        const map = {
+            wbnb:
+                "binancecoin",
+            usdt:
+                "tether",
+            usdc:
+                "usd-coin",
+            cake:
+                "pancakeswap-token",
+            eth:
+                "ethereum",
+            btc:
+                "bitcoin",
+            fdusd:
+                "first-digital-usd",
+            xrp:
+                "ripple",
+            doge:
+                "dogecoin"
+        };
+        const id =
+            map[token.priceKey];
+        if (
+            !id ||
+            !prices[id]
+        ) {
+            return null;
+        }
+        return Number(
+            prices[id].usd
+        );
+    }
+    /*
+    ==========================================================
+    TVL
+    ==========================================================
+    */
+    function calculateTVL(
+        balance0,
+        balance1,
+        price0,
+        price1
+    ) {
+        if (
+            price0 == null ||
+            price1 == null
+        ) {
+            return null;
+        }
+        const value0 =
+            Number(
+                balance0
+            ) *
+            price0;
+        const value1 =
+            Number(
+                balance1
+            ) *
+            price1;
+        return value0 + value1;
+    }
+    /*
+    ==========================================================
+    健康度
+    這個版本不是 APR 評分。
+    原因：
+    純 HTML + RPC 沒有 indexer 時，
+    不能假裝有 24H Volume / 24H Fees。
+    所以使用：
+    TVL            35%
+    Liquidity      25%
+    Pool 狀態       15%
+    Fee Tier        10%
+    Price / TVL     15%
+    ==========================================================
+    */
+    function calculateHealth(
+        pool
+    ) {
+        /*
+        TVL score
+        */
+        let tvlScore = 5;
+        if (
+            pool.tvl != null
+        ) {
+            if (
+                pool.tvl >= 10000000
+            ) {
+                tvlScore = 10;
+            } else if (
+                pool.tvl >= 5000000
+            ) {
+                tvlScore = 9;
+            } else if (
+                pool.tvl >= 1000000
+            ) {
+                tvlScore = 8;
+            } else if (
+                pool.tvl >= 500000
+            ) {
+                tvlScore = 7;
+            } else if (
+                pool.tvl >= 200000
+            ) {
+                tvlScore = 5;
+            } else if (
+                pool.tvl >= 50000
+            ) {
+                tvlScore = 3;
+            } else {
+                tvlScore = 1;
+            }
+        }
+        /*
+        Liquidity score
+        */
+        let liquidityScore = 5;
+        const liquidity =
+            Number(
+                pool.liquidity
+            );
+        if (
+            liquidity > 1000000000000000000
+        ) {
+            liquidityScore = 10;
+        } else if (
+            liquidity > 100000000000000000
+        ) {
+            liquidityScore = 8;
+        } else if (
+            liquidity > 10000000000000000
+        ) {
+            liquidityScore = 6;
+        } else if (
+            liquidity > 0
+        ) {
+            liquidityScore = 4;
+        } else {
+            liquidityScore = 0;
+        }
+        /*
+        Fee Tier
+        0.01 / 0.05 / 0.25 / 1
+        */
+        let feeScore;
+        const fee =
+            pool.fee / 10000;
+        if (
+            fee === 0.01
+        ) {
+            feeScore = 7;
+        } else if (
+            fee === 0.05
+        ) {
+            feeScore = 9;
+        } else if (
+            fee === 0.25
+        ) {
+            feeScore = 10;
+        } else if (
+            fee === 1
+        ) {
+            feeScore = 6;
+        } else {
+            feeScore = 5;
+        }
+        /*
+        Pool 狀態
+        Tick / sqrtPrice 是否有效
+        */
+        const stateScore =
+            pool.sqrtPriceX96 > 0n
+                ? 10
+                : 0;
+        /*
+        Token price score
+        */
+        const priceScore =
+            pool.price0 != null &&
+            pool.price1 != null
+                ? 10
+                : 5;
+        const score =
+            tvlScore * 0.35 +
+            liquidityScore * 0.25 +
+            stateScore * 0.15 +
+            feeScore * 0.10 +
+            priceScore * 0.15;
+        return {
+            score:
+                Math.max(
+                    0,
+                    Math.min(
+                        10,
+                        score
+                    )
+                ),
+            level:
+                healthLevel(
+                    score
+                )
+        };
+    }
+    /*
+    ==========================================================
+    Health Level
+    ==========================================================
+    */
+    function healthLevel(
+        score
+    ) {
+        if (
+            score >= 9
+        ) {
+            return "🟢 S級優質池";
+        }
+        if (
+            score >= 8
+        ) {
+            return "🟢 優質池";
+        }
+        if (
+            score >= 7
+        ) {
+            return "🟢 健康池";
+        }
+        if (
+            score >= 5
+        ) {
+            return "🟡 可做";
+        }
+        if (
+            score >= 3
+        ) {
+            return "🟠 普通池";
+        }
+        return "🔴 垃圾池";
+    }
+    /*
+    ==========================================================
+    Render Details
+    ==========================================================
+    */
+    function renderPoolDetails() {
+        const pool =
+            currentPool;
+        document.getElementById(
+            "pairValue"
+        ).textContent =
+            pool.token0Symbol +
+            " / " +
+            pool.token1Symbol;
+        document.getElementById(
+            "feeValue"
+        ).textContent =
+            feeToPercent(
+                pool.fee
+            );
+        document.getElementById(
+            "token0Value"
+        ).textContent =
+            pool.token0Symbol;
+        document.getElementById(
+            "token1Value"
+        ).textContent =
+            pool.token1Symbol;
+        document.getElementById(
+            "liquidityValue"
+        ).textContent =
+            formatBigInt(
+                pool.liquidity
+            );
+        document.getElementById(
+            "tickValue"
+        ).textContent =
+            pool.tick.toString();
+        document.getElementById(
+            "balance0Value"
+        ).textContent =
+            formatDisplayNumber(
+                pool.balance0
+            ) +
+            " " +
+            pool.token0Symbol;
+        document.getElementById(
+            "balance1Value"
+        ).textContent =
+            formatDisplayNumber(
+                pool.balance1
+            ) +
+            " " +
+            pool.token1Symbol;
+        document.getElementById(
+            "price0Value"
+        ).textContent =
+            pool.price0 != null
+                ? "$" +
+                formatNumber(
+                    pool.price0
+                )
+                : "無法取得";
+        document.getElementById(
+            "price1Value"
+        ).textContent =
+            pool.price1 != null
+                ? "$" +
+                formatNumber(
+                    pool.price1
+                )
+                : "無法取得";
+        document.getElementById(
+            "tvlValue"
+        ).textContent =
+            pool.tvl != null
+                ? money(
+                pool.tvl
+                )
+                : "無法估算";
+        document.getElementById(
+            "poolAddressValue"
+        ).textContent =
+            pool.address;
+        document.getElementById(
+            "healthScore"
+        ).textContent =
+            pool.health.score
+                .toFixed(2);
+        document.getElementById(
+            "healthLevel"
+        ).textContent =
+            pool.health.level;
+        document.getElementById(
+            "healthDesc"
+        ).textContent =
+            healthDescription(
+                pool.health.score
+            );
+    }
+    /*
+    ==========================================================
+    健康度描述
+    ==========================================================
+    */
+    function healthDescription(
+        score
+    ) {
+        if (
+            score >= 9
+        ) {
+            return "鏈上流動性與 Pool 狀態非常好。";
+        }
+        if (
+            score >= 8
+        ) {
+            return "整體鏈上狀態良好。";
+        }
+        if (
+            score >= 7
+        ) {
+            return "流動性與 Pool 狀態正常，可進一步評估。";
+        }
+        if (
+            score >= 5
+        ) {
+            return "可以觀察，但建議進一步查看交易量與 IL。";
+        }
+        if (
+            score >= 3
+        ) {
+            return "流動性偏低或 Pool 狀態普通。";
+        }
+        return "不建議僅依目前鏈上狀態進行 LP。";
+    }
+    /*
+    ==========================================================
+    Refresh Selected
+    ==========================================================
+    */
+    async function refreshSelectedPool() {
+        if (!currentPool) {
+            alert(
+                "請先選擇 Pool。"
+            );
+            return;
+        }
+        await loadPool(
+            currentPool.address,
+            currentPool.fee
+        );
+    }
+    /*
+    ==========================================================
+    手動 Pool Address
+    ==========================================================
+    */
+    async function loadPoolFromAddress() {
+        const input =
+            document.getElementById(
+                "manualPool"
+            ).value.trim();
+        if (
+            !/^0x[a-fA-F0-9]{40}$/.test(
+                input
+            )
+        ) {
+            alert(
+                "請輸入正確的 0x... Pool Address。"
+            );
+            return;
+        }
+        try {
+            const feeRaw =
+                await ethCall(
+                    input,
+                    SELECTOR.fee
+                );
+            const fee =
+                Number(
+                    decodeUint(
+                        feeRaw
+                    )
+                );
+            await loadPool(
+                input,
+                fee
+            );
+        } catch (error) {
+            setStatus(
+                "error",
+                "無法讀取這個 Pool：" +
+                error.message
+            );
+        }
+    }
+    /*
+    ==========================================================
+    加入監控
+    ==========================================================
+    */
+    function addToWatchlist() {
+        if (!currentPool) {
+            alert(
+                "請先選擇 Pool。"
+            );
+            return;
+        }
+        const exists =
+            watchlist.some(
+                x =>
+                    x.address.toLowerCase() ===
+                    currentPool.address.toLowerCase()
+            );
+        if (exists) {
+            alert(
+                "這個 Pool 已經在監控列表。"
+            );
+            return;
+        }
+        watchlist.push({
+            address:
+            currentPool.address,
+            fee:
+            currentPool.fee,
+            token0:
+            currentPool.token0,
+            token1:
+            currentPool.token1,
+            token0Symbol:
+            currentPool.token0Symbol,
+            token1Symbol:
+            currentPool.token1Symbol,
+            added:
+                Date.now(),
+            data:
+                serializePool(
+                    currentPool
+                )
         });
-
-        // 按健康度排序
-        pools.sort((a, b) => b.health - a.health);
-        savePools();
-        renderTable();
-
-        // 顯示健康度 + 評語
-        const table = document.getElementById('poolTable').getElementsByTagName('tbody')[0];
-        Array.from(table.rows).forEach((row, i) => {
-            row.cells[5].textContent = pools[i].health.toFixed(2);
-            row.cells[5].title = pools[i].comment; // 滑鼠懸停看評語
-        });
+        saveWatchlist();
+        renderWatchlist();
+        alert(
+            "✅ 已加入監控。"
+        );
+    }
+    /*
+    ==========================================================
+    Serialize
+    ==========================================================
+    */
+    function serializePool(
+        pool
+    ) {
+        return {
+            address:
+            pool.address,
+            fee:
+            pool.fee,
+            token0:
+            pool.token0,
+            token1:
+            pool.token1,
+            token0Symbol:
+            pool.token0Symbol,
+            token1Symbol:
+            pool.token1Symbol,
+            token0Decimals:
+            pool.token0Decimals,
+            token1Decimals:
+            pool.token1Decimals,
+            balance0:
+            pool.balance0,
+            balance1:
+            pool.balance1,
+            price0:
+            pool.price0,
+            price1:
+            pool.price1,
+            tvl:
+            pool.tvl,
+            liquidity:
+                pool.liquidity.toString(),
+            tick:
+                pool.tick.toString(),
+            health:
+            pool.health
+        };
+    }
+    /*
+    ==========================================================
+    Render Watchlist
+    ==========================================================
+    */
+    function renderWatchlist() {
+        const body =
+            document.getElementById(
+                "watchlistBody"
+            );
+        body.innerHTML = "";
+        watchlist
+            .sort(
+                (a, b) =>
+                    (
+                        b.data.health?.score ||
+                        0
+                    ) -
+                    (
+                        a.data.health?.score ||
+                        0
+                    )
+            )
+            .forEach(
+                (
+                    item,
+                    index
+                ) => {
+                    const tr =
+                        document.createElement(
+                            "tr"
+                        );
+                    const health =
+                        item.data.health;
+                    tr.innerHTML = `
+                    <td>
+                        ${index + 1}
+                    </td>
+                    <td>
+                        ${item.token0Symbol}
+                        /
+                        ${item.token1Symbol}
+                    </td>
+                    <td>
+                        ${feeToPercent(item.fee)}
+                    </td>
+                    <td>
+                        ${
+                        item.data.tvl != null
+                            ? money(item.data.tvl)
+                            : "-"
+                    }
+                    </td>
+                    <td>
+                        ${formatBigInt(
+                        BigInt(
+                            item.data.liquidity || 0
+                        )
+                    )}
+                    </td>
+                    <td>
+                        ${item.data.tick || "-"}
+                    </td>
+                    <td>
+                        ${
+                        health
+                            ? health.score.toFixed(2)
+                            : "-"
+                    }
+                    </td>
+                    <td class="${levelClass(
+                        health
+                            ? health.score
+                            : 0
+                    )}">
+                        ${
+                        health
+                            ? health.level
+                            : "-"
+                    }
+                    </td>
+                    <td>
+                        <button
+                            class="primary"
+                            onclick="watchLoad('${item.address}')"
+                        >
+                            查看
+                        </button>
+                        <button
+                            class="red"
+                            onclick="removeWatch(${index})"
+                        >
+                            刪除
+                        </button>
+                    </td>
+                `;
+                    body.appendChild(
+                        tr
+                    );
+                }
+            );
+    }
+    /*
+    ==========================================================
+    Watch Load
+    ==========================================================
+    */
+    async function watchLoad(
+        address
+    ) {
+        const item =
+            watchlist.find(
+                x =>
+                    x.address.toLowerCase() ===
+                    address.toLowerCase()
+            );
+        if (!item) return;
+        await loadPool(
+            item.address,
+            item.fee
+        );
+    }
+    /*
+    ==========================================================
+    Remove
+    ==========================================================
+    */
+    function removeWatch(
+        index
+    ) {
+        if (
+            !confirm(
+                "確定刪除這個 Pool？"
+            )
+        ) {
+            return;
+        }
+        watchlist.splice(
+            index,
+            1
+        );
+        saveWatchlist();
+        renderWatchlist();
+    }
+    /*
+    ==========================================================
+    Refresh Watchlist
+    ==========================================================
+    */
+    async function refreshWatchlist() {
+        if (
+            watchlist.length === 0
+        ) {
+            alert(
+                "目前沒有監控 Pool。"
+            );
+            return;
+        }
+        setStatus(
+            "ready",
+            "⏳ 正在更新所有監控 Pool..."
+        );
+        for (
+            const item of watchlist
+            ) {
+            try {
+                const pool =
+                    await loadPoolDataOnly(
+                        item.address
+                    );
+                if (!pool) continue;
+                item.data =
+                    serializePool(
+                        pool
+                    );
+            } catch (
+                error
+                ) {
+                console.error(
+                    item.address,
+                    error
+                );
+            }
+        }
+        saveWatchlist();
+        renderWatchlist();
+        document.getElementById(
+            "lastUpdate"
+        ).textContent =
+            "最後更新：" +
+            new Date()
+                .toLocaleString(
+                    "zh-TW"
+                );
+        setStatus(
+            "ok",
+            "✅ 所有監控 Pool 已更新。"
+        );
+    }
+    /*
+    ==========================================================
+    只讀 Pool
+    ==========================================================
+    */
+    async function loadPoolDataOnly(
+        address
+    ) {
+        const [
+            token0Raw,
+            token1Raw,
+            feeRaw,
+            liquidityRaw,
+            slot0Raw
+        ] =
+            await Promise.all([
+                ethCall(
+                    address,
+                    SELECTOR.token0
+                ),
+                ethCall(
+                    address,
+                    SELECTOR.token1
+                ),
+                ethCall(
+                    address,
+                    SELECTOR.fee
+                ),
+                ethCall(
+                    address,
+                    SELECTOR.liquidity
+                ),
+                ethCall(
+                    address,
+                    SELECTOR.slot0
+                )
+            ]);
+        const token0 =
+            decodeAddress(
+                token0Raw
+            );
+        const token1 =
+            decodeAddress(
+                token1Raw
+            );
+        const fee =
+            Number(
+                decodeUint(
+                    feeRaw
+                )
+            );
+        const liquidity =
+            decodeUint(
+                liquidityRaw
+            );
+        const clean =
+            slot0Raw.replace(
+                /^0x/,
+                ""
+            );
+        const sqrtPriceX96 =
+            decodeUint(
+                "0x" +
+                clean.slice(
+                    0,
+                    64
+                )
+            );
+        const tick =
+            decodeInt256(
+                "0x" +
+                clean.slice(
+                    64,
+                    128
+                )
+            );
+        const [
+            token0Symbol,
+            token1Symbol,
+            token0Decimals,
+            token1Decimals,
+            balance0Raw,
+            balance1Raw
+        ] =
+            await Promise.all([
+                readSymbol(
+                    token0
+                ),
+                readSymbol(
+                    token1
+                ),
+                readDecimals(
+                    token0
+                ),
+                readDecimals(
+                    token1
+                ),
+                readBalance(
+                    token0,
+                    address
+                ),
+                readBalance(
+                    token1,
+                    address
+                )
+            ]);
+        const prices =
+            await getPrices();
+        const price0 =
+            getTokenPrice(
+                token0,
+                token0Symbol,
+                prices
+            );
+        const price1 =
+            getTokenPrice(
+                token1,
+                token1Symbol,
+                prices
+            );
+        const balance0 =
+            formatTokenAmount(
+                balance0Raw,
+                token0Decimals
+            );
+        const balance1 =
+            formatTokenAmount(
+                balance1Raw,
+                token1Decimals
+            );
+        const tvl =
+            calculateTVL(
+                balance0,
+                balance1,
+                price0,
+                price1
+            );
+        const pool = {
+            address,
+            fee,
+            token0,
+            token1,
+            token0Symbol,
+            token1Symbol,
+            token0Decimals,
+            token1Decimals,
+            balance0,
+            balance1,
+            price0,
+            price1,
+            tvl,
+            liquidity,
+            sqrtPriceX96,
+            tick
+        };
+        pool.health =
+            calculateHealth(
+                pool
+            );
+        return pool;
+    }
+    /*
+    ==========================================================
+    清空
+    ==========================================================
+    */
+    function clearWatchlist() {
+        if (
+            !confirm(
+                "確定清空全部監控？"
+            )
+        ) {
+            return;
+        }
+        watchlist = [];
+        saveWatchlist();
+        renderWatchlist();
+    }
+    /*
+    ==========================================================
+    Storage
+    ==========================================================
+    */
+    function saveWatchlist() {
+        localStorage.setItem(
+            "pancakeV3Watchlist",
+            JSON.stringify(
+                watchlist
+            )
+        );
+    }
+    /*
+    ==========================================================
+    Open PancakeSwap
+    ==========================================================
+    */
+    function openPancakePool() {
+        if (!currentPool) {
+            alert(
+                "請先選擇 Pool。"
+            );
+            return;
+        }
+        const url =
+            "https://pancakeswap.finance/info/pool/" +
+            currentPool.address;
+        window.open(
+            url,
+            "_blank"
+        );
+    }
+    /*
+    ==========================================================
+    Status
+    ==========================================================
+    */
+    function setStatus(
+        type,
+        message
+    ) {
+        const element =
+            document.getElementById(
+                "status"
+            );
+        element.className =
+            "status";
+        if (
+            type === "ok"
+        ) {
+            element.classList.add(
+                "ok"
+            );
+        }
+        if (
+            type === "error"
+        ) {
+            element.classList.add(
+                "error"
+            );
+        }
+        element.innerHTML =
+            message;
+    }
+    /*
+    ==========================================================
+    Utilities
+    ==========================================================
+    */
+    function feeToPercent(
+        fee
+    ) {
+        return (
+            Number(fee) /
+            10000
+        ).toFixed(2) + "%";
+    }
+    function shortAddress(
+        address
+    ) {
+        return (
+            address.slice(
+                0,
+                6
+            ) +
+            "..." +
+            address.slice(
+                -4
+            )
+        );
+    }
+    function formatBigInt(
+        value
+    ) {
+        const str =
+            value.toString();
+        if (
+            str.length <= 6
+        ) {
+            return str;
+        }
+        return (
+            Number(
+                str
+            ).toLocaleString(
+                "en-US",
+                {
+                    maximumFractionDigits:
+                        0
+                }
+            )
+        );
+    }
+    function formatDisplayNumber(
+        value
+    ) {
+        const number =
+            Number(value);
+        if (
+            !Number.isFinite(
+                number
+            )
+        ) {
+            return value;
+        }
+        return number.toLocaleString(
+            "en-US",
+            {
+                maximumFractionDigits:
+                    6
+            }
+        );
+    }
+    function formatNumber(
+        value
+    ) {
+        return Number(value)
+            .toLocaleString(
+                "en-US",
+                {
+                    maximumFractionDigits:
+                        4
+                }
+            );
+    }
+    function money(
+        value
+    ) {
+        if (
+            value == null ||
+            !Number.isFinite(
+                Number(value)
+            )
+        ) {
+            return "-";
+        }
+        const n =
+            Number(value);
+        if (
+            n >= 1_000_000_000
+        ) {
+            return (
+                "$" +
+                (
+                    n /
+                    1_000_000_000
+                ).toFixed(2) +
+                "B"
+            );
+        }
+        if (
+            n >= 1_000_000
+        ) {
+            return (
+                "$" +
+                (
+                    n /
+                    1_000_000
+                ).toFixed(2) +
+                "M"
+            );
+        }
+        if (
+            n >= 1_000
+        ) {
+            return (
+                "$" +
+                (
+                    n /
+                    1_000
+                ).toFixed(2) +
+                "K"
+            );
+        }
+        return (
+            "$" +
+            n.toFixed(2)
+        );
+    }
+    function levelClass(
+        score
+    ) {
+        if (
+            score >= 7
+        ) {
+            return "level-good";
+        }
+        if (
+            score >= 5
+        ) {
+            return "level-mid";
+        }
+        return "level-bad";
     }
 </script>
-
 </body>
 </html>
